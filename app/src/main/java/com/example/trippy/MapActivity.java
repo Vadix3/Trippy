@@ -91,6 +91,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.contentMap_FRG_map);
         mapFragment.getMapAsync(this);
+        mapView = mapFragment.getView();
     }
 
     /**
@@ -114,12 +115,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
         // Init places
-        Places.initialize(MapActivity.this, getString(R.string.API_KEY));
+        Places.initialize(MapActivity.this, getString(R.string.google_maps_api_key));
         placesClient = Places.createClient(this);
 
         // Init autocomplete token
         AutocompleteSessionToken token = AutocompleteSessionToken.newInstance();
-
         moveLocationButtonToBottom(); // Move location button to bottom of screen
         isLocationEnabled(); // Check for location toggle
     }
@@ -260,15 +260,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "moveLocationButtonToBottom: Moving location button to bottom");
         // Fetch the layout params of the location button
         if (mapView != null && mapView.findViewById(Integer.parseInt("1")) != null) {
+            Log.d(TAG, "moveLocationButtonToBottom: Moving button");
             View locationButton = ((View) mapView.findViewById(Integer.parseInt("1"))
                     .getParent()).findViewById(Integer.parseInt("2"));
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton
-                    .getLayoutParams();
-            // Removing align parent top of the location button, and positioning bottom
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
             layoutParams.setMargins(0, 0, 40, 180);
-            locationButton.setLayoutParams(layoutParams);
+        } else if (mapView == null) {
+            Log.d(TAG, "moveLocationButtonToBottom: mapview is null");
         }
     }
 
