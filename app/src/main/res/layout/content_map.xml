@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MapActivity"
+    tools:showIn="@layout/activity_map">
+
+
+    <fragment
+        android:id="@+id/contentMap_FRG_map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.mancj.materialsearchbar.MaterialSearchBar
+        android:id="@+id/contentMap_SBR_searchBar"
+        style="@style/MaterialSearchBarLight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:elevation="5dp"
+        android:outlineProvider="bounds"
+        app:mt_hint="Custom hint"
+        app:mt_maxSuggestionsCount="10"
+        app:mt_navIconEnabled="true"
+        app:mt_placeholder="Search a place!"
+        app:mt_speechMode="false" />
+
+    <Button
+        android:id="@+id/contentMap_BTN_findButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        android:background="@color/colorPrimary"
+        android:text="Find Restaurants"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+    <!--TODO: Attribure Freepik-->
+    <ImageView
+        android:id="@+id/contentMap_IMG_pin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/ic_pin"
+        android:translationY="-18dp" />
+
+
+</RelativeLayout>
