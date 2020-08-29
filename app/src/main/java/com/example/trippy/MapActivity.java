@@ -69,7 +69,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private View mapView;
     private Button btnFind;
 
-    private static final float DEFAULT_ZOOM = 18f;
+    private static final float DEFAULT_ZOOM = 15f;
 
 
     @Override
