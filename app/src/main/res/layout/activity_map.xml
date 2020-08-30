@@ -4,25 +4,38 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="3dp"
     tools:context=".MapActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="8dp"
         android:text="Trippy app"
         android:textColor="@color/colorPrimary"
-        android:textSize="60sp"
+        android:textSize="50sp"
         android:textStyle="bold" />
 
-    <include
-        layout="@layout/content_map"
-        android:layout_width="350dp"
-        android:layout_height="400dp"
+    <RelativeLayout
+        android:id="@+id/activityMap_LAY_mapLayout"
+        android:layout_width="360dp"
+        android:layout_height="630dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="30dp" />
+        android:layout_marginBottom="10dp"
+        android:padding="1dp"
+        android:background="@color/quantum_black_100">
+
+        <include
+            android:id="@+id/activityMap_FRG_mapFragment"
+            layout="@layout/content_map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
 
 
 </RelativeLayout>

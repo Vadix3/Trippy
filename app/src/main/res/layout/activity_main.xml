@@ -2,8 +2,132 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_LAY_mainlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="3dp"
     tools:context=".MainActivity">
+
+    <RelativeLayout
+        android:id="@+id/main_LAY_titleLayout"
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+
+        <TextView
+            android:id="@+id/main_LBL_welcomeTo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+            android:text="Welcome to Israel!"
+            android:textColor="@color/coolBlue"
+            android:textSize="50dp"
+            android:textStyle="bold" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/main_LAY_infoLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/main_LAY_titleLayout">
+
+        <TextView
+            android:id="@+id/main_LBL_currencyLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:text="1 EUR = X ILS"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/main_LBL_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/main_LBL_currencyLabel"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="2dp"
+            android:layout_marginRight="20dp"
+            android:text="31c Sunny"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/main_LBL_plansForToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/main_LBL_weather"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:gravity="center"
+            android:text="Plans for today:\n - Jerusalem trip at 10am\n- Eilat bus at 19pm"
+            android:textSize="30sp" />
+
+    </RelativeLayout>
+
+    <GridLayout
+        android:id="@+id/main_LAY_buttonsGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp">
+
+        <Button
+            android:id="@+id/main_BTN_addCalenderEvent"
+            android:layout_width="180dp"
+            android:layout_height="100dp"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:layout_margin="5dp"
+            android:background="@color/coolBlue"
+            android:text="Add Calendar event"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/main_BTN_Translator"
+            android:layout_width="180dp"
+            android:layout_height="100dp"
+            android:layout_row="1"
+            android:layout_column="0"
+            android:layout_margin="5dp"
+            android:background="@color/coolBlue"
+            android:text="Translator"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/main_BTN_openMap"
+            android:layout_width="180dp"
+            android:layout_height="100dp"
+            android:layout_row="0"
+            android:layout_column="1"
+            android:layout_margin="5dp"
+            android:background="@color/coolBlue"
+            android:text="Open Map"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/main_BTN_directions"
+            android:layout_width="180dp"
+            android:layout_height="100dp"
+            android:layout_row="1"
+            android:layout_column="1"
+            android:layout_margin="5dp"
+            android:background="@color/coolBlue"
+            android:text="Get Directions"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+    </GridLayout>
 
 </RelativeLayout>

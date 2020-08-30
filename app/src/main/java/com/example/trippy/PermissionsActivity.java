@@ -34,7 +34,7 @@ public class PermissionsActivity extends AppCompatActivity {
 
         if (ContextCompat.checkSelfPermission(PermissionsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED) { // Permission already granted, quit and countinue
-            startActivity(new Intent(PermissionsActivity.this, MapActivity.class));
+            startActivity(new Intent(PermissionsActivity.this, MainActivity.class));
             finish();
             return;
         }
@@ -49,7 +49,7 @@ public class PermissionsActivity extends AppCompatActivity {
                         .withListener(new PermissionListener() {
                             @Override
                             public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
-                                startActivity(new Intent(PermissionsActivity.this, MapActivity.class));
+                                startActivity(new Intent(PermissionsActivity.this, MainActivity.class));
                                 finish();
                             }
 
