@@ -8,18 +8,21 @@
     android:orientation="vertical"
     android:padding="3dp"
     tools:context=".MainActivity">
-
+    <!-- TODO: Add timezone-->
     <RelativeLayout
         android:id="@+id/main_LAY_titleLayout"
         android:layout_width="match_parent"
         android:layout_height="200dp">
-
+        <!--TODO: Add edit text on this place to change title-->
         <TextView
             android:id="@+id/main_LBL_welcomeTo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
             android:layout_marginTop="30dp"
             android:gravity="center"
+            android:maxLines="1"
             android:text="Welcome to Israel!"
             android:textColor="@color/coolBlue"
             android:textSize="50dp"

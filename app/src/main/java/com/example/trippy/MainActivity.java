@@ -3,15 +3,12 @@ package com.example.trippy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -41,14 +38,12 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.gson.JsonObject;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -60,11 +55,10 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
-import static android.accounts.AccountManager.KEY_ERROR_MESSAGE;
-
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, OnNewTripCallbackListener {
 
     private static final String TAG = "pttt";
     private Toast toast;
@@ -95,12 +89,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Location mLastKnownLocation; // Last known location of the device
     private LocationCallback locationCallback; // Updating users request if last known location is null
     private LatLng myLocationLatLng;
-    private MyCurrentLocation myCurrentLocation;
+    private MyTrip myCurrentTrip;
+
+    /**
+     * Variables
+     */
+    // If there are details saved on server / firebase
+    private boolean tripDetailsAvailableToLoad = false;
+
+    // If user loaded / created trip details
+    private boolean tripDetailsLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mainLayout = findViewById(R.id.main_LAY_mainlayout);
+        makeSnackbar("Loading location data", R.color.coolBlue);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         isLocationEnabled();
         initViews();
@@ -113,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * A method to init Views
      */
     private void initViews() {
-        mainLayout = findViewById(R.id.main_LAY_mainlayout);
 
         openMapButton = findViewById(R.id.main_BTN_openMap);
         openMapButton.setOnClickListener(this);
@@ -123,6 +127,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         openDirectionButton.setOnClickListener(this);
         openTranslatorButton = findViewById(R.id.main_BTN_Translator);
         openTranslatorButton.setOnClickListener(this);
+
+        // Activate buttons before dialog
+        openCalendarButton.setClickable(false);
+        openMapButton.setClickable(false);
+        openTranslatorButton.setClickable(false);
+        openDirectionButton.setClickable(false);
 
         titleLayout = findViewById(R.id.main_LAY_titleLayout);
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
@@ -144,9 +154,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 makeToast("Opening directions map");
                 break;
             case R.id.main_BTN_Translator:
-                makeToast("Opening translator");
+                openTranslator();
                 break;
         }
+    }
+
+    /**
+     * A method to open the translator activity
+     */
+    private void openTranslator() {
+        TranslationDialog translationDialog = new TranslationDialog(MainActivity.this);
+        createDialog(translationDialog, null);
     }
 
     /**
@@ -320,15 +338,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
 
         initMyCurrentLocation();
-        setFlagImage(myCurrentLocation.getCountryCode());
-        welcomeLabel.setText("" + myCurrentLocation.getCity() + ", " + myCurrentLocation.getCountry());
+        setFlagImage(myCurrentTrip.getCountryCode());
+        welcomeLabel.setText("" + myCurrentTrip.getCity() + ", " + myCurrentTrip.getCountry());
 
         /** After we are done with location, find currency*/
         getCurrency();
     }
 
     /**
-     * A method to initialize MyCurrentLocation object
+     * A method to initialize MyTrip object
      */
     private void initMyCurrentLocation() {
         try {
@@ -342,7 +360,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String countryCode = addresses.get(0).getCountryCode();
             String currencyCode = countryCodeToCurrencyCode(countryCode);
             float currencyRate = 0;
-            myCurrentLocation = new MyCurrentLocation(city, country, countryCode, currencyCode, currencyRate);
+            myCurrentTrip = new MyTrip(city, country, countryCode, currencyCode, currencyRate
+                    , null, null);
         } catch (IOException e) {
             Log.d(TAG, "updateUItoMatchLocation: Problem: " + e.getMessage());
         }
@@ -441,6 +460,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onFailure(Request request, IOException e) {
                 Log.d(TAG, "onFailure: Request failed:" + e.getMessage());
+                //TODO: Check for last currency if available
+                currencyLabel.setText("N/A");
+                makeToast("Currency not available");
+                getLocationWeather();
             }
 
             @Override
@@ -451,14 +474,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     String responseString = response.body().string();
                     String tempCurrency = getValueFromJsonString(responseString
-                            , myCurrentLocation.getCurrencyCode(), "rates");
+                            , myCurrentTrip.getCurrencyCode(), "rates");
                     Log.d(TAG, "onResponse: Got: " + tempCurrency);
-                    myCurrentLocation.setCurrencyRate(Float.parseFloat(tempCurrency));
+                    myCurrentTrip.setCurrencyRate(Float.parseFloat(tempCurrency));
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            currencyLabel.setText("1 EUR = " + myCurrentLocation.getCurrencyRate()
-                                    + " " + myCurrentLocation.getCurrencyCode());
+                            currencyLabel.setText("1 EUR = " + myCurrentTrip.getCurrencyRate()
+                                    + " " + myCurrentTrip.getCurrencyCode());
                         }
                     });
                 }
@@ -477,7 +500,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "getLocationWeather: Getting city weather");
 
 
-        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + myCurrentLocation.getCity()
+        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + myCurrentTrip.getCity()
                 + "&units=metric&appid=" + getString(R.string.open_weather_api_key);
 
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -490,6 +513,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onFailure(Request request, IOException e) {
                 Log.d(TAG, "onFailure: Request failed:" + e.getMessage());
+                //TODO: Check previous weather
+                weatherLabel.setText("N/A");
+                makeToast("Weather not available");
+                checkForTripDetails();
             }
 
             @Override
@@ -509,20 +536,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            weatherLabel.setGravity(Gravity.CENTER_HORIZONTAL);
-                            weatherLabel.setText(locationTemp + "°C, feels like: " + feelsLike
-                                    + "°C\n" + locationWeatherDescription);
+                            int realIntTemp = (int) Float.parseFloat(locationTemp);
+                            int feelsIntTemp = (int) Float.parseFloat(feelsLike);
+                            if (realIntTemp != feelsIntTemp) { // If there is no difference
+                                weatherLabel.setGravity(Gravity.CENTER_HORIZONTAL);
+                                weatherLabel.setText(realIntTemp + "°C, feels like: "
+                                        + feelsIntTemp
+                                        + "°C\n" + locationWeatherDescription);
+                            } else {
+                                weatherLabel.setGravity(Gravity.CENTER_HORIZONTAL);
+                                weatherLabel.setText(realIntTemp + "°C\n" + locationWeatherDescription);
+                            }
+                            makeSnackbar("Location data loaded!", R.color.coolGreen);
+
+                            //TODO: Continue here after we got the weather details
+                            checkForTripDetails();
                         }
                     });
-
-
                 } catch (JSONException e) {
                     Log.d(TAG, "onResponse: Exception: " + e.getMessage());
                 }
-
             }
         });
+    }
 
+    /**
+     * A method to check if trip details are available.
+     * if there are, load them from SP.
+     * else prompt user to enter them
+     */
+    private void checkForTripDetails() {
+        Log.d(TAG, "checkForTripDetails: Checking if trip details are available");
+        if (tripDetailsAvailableToLoad) {
+            loadTripDetails();
+        } else {
+            //Trip details are not available, ask user to enter them
+            NewTripActivity newTripActivity = new NewTripActivity(MainActivity.this);
+            createDialog(newTripActivity, null);
+        }
+    }
+
+    /**
+     * A method to load trip details from SP or server
+     * TODO:Complete it once relevant, load type?
+     */
+    private void loadTripDetails() {
+        Log.d(TAG, "loadTripDetails: Loading trip details from");
     }
 
     /**
@@ -579,7 +638,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
 
         int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
-        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.55);
+        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.65);
         dialog.getWindow().setLayout(width, height);
         dialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -589,6 +648,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         });
+    }
+
+    /**
+     * Get the dates list and trip name from new trip dialog
+     */
+    @Override
+    public void getResult(List<Date> tripDates, String tripName) {
+
+        // Activate buttons after dialog
+        openCalendarButton.setClickable(true);
+        openMapButton.setClickable(true);
+        openTranslatorButton.setClickable(true);
+        openDirectionButton.setClickable(true);
+
+        if (tripDates == null && tripName == null) {
+            Log.d(TAG, "getResult: Null results");
+            return;
+        }
+        if (tripDates == null) {
+            Log.d(TAG, "getResult: Null tripDates");
+            return;
+        }
+        if (tripName == null) {
+            Log.d(TAG, "getResult: Null tripName");
+            return;
+        }
+
+        myCurrentTrip.setTripDates(tripDates);
+        myCurrentTrip.setTripName(tripName);
+
+        Log.d(TAG, "getResult: getting callback from new trip dialog with results:\n" +
+                "tripDates: " + myCurrentTrip.getTripDates().toString()
+                + "\ntripName: " + myCurrentTrip.getTripName());
+
+        welcomeLabel.setText("" + tripName);
+        welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
+        tripDetailsLoaded = true;
     }
 }
 
