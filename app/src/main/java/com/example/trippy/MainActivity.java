@@ -38,6 +38,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -58,9 +59,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, OnNewTripCallbackListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener
+        , OnNewTripCallbackListener, OnCalendarDialogDismissedListener {
 
     private static final String TAG = "pttt";
+    private static final String NEW_TRIP_DIALOG = "newTripDialog";
+    private static final String OPEN_NAVIGATION = "navigationDialog";
+    private static final String OPEN_CALENDAR = "addCalendarEvent";
+    private static final String OPEN_TRANSLATOR = "openTranslator";
+
+
     private Toast toast;
     /**
      * Views
@@ -79,7 +87,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView welcomeLabel;
     private TextView currencyLabel;
     private TextView weatherLabel;
-
+    private TextView tripDatesLabel;
+    //TODO: Convert to fine list
+    private TextView tripEventsLabel;
     //ImageViews
 
     /**
@@ -95,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Variables
      */
     // If there are details saved on server / firebase
-    private boolean tripDetailsAvailableToLoad = false;
+    private boolean tripDetailsAvailableToLoad = true;
 
     // If user loaded / created trip details
     private boolean tripDetailsLoaded = false;
@@ -138,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
         currencyLabel = findViewById(R.id.main_LBL_currencyLabel);
         weatherLabel = findViewById(R.id.main_LBL_weather);
-
+        tripDatesLabel = findViewById(R.id.main_LBL_tripdateslabel);
+        tripEventsLabel = findViewById(R.id.main_LBL_tripEventsLabel);
     }
 
     @Override
@@ -163,16 +174,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * A method to open the translator activity
      */
     private void openTranslator() {
-        TranslationDialog translationDialog = new TranslationDialog(MainActivity.this);
-        createDialog(translationDialog, null);
+        createDialog(new TranslationDialog(MainActivity.this), OPEN_TRANSLATOR);
     }
 
     /**
      * A method to open the caledar
      */
     private void openCalendar() {
-        CalendarDialog calendarDialog = new CalendarDialog(MainActivity.this);
-        createDialog(calendarDialog, null);
+        Log.d(TAG, "openCalendar: Open calendar pressed");
+        if (myCurrentTrip.getTripDates() != null && myCurrentTrip.getEvents() != null) { // I have both arrays
+            Log.d(TAG, "openCalendar: Sending events and dates");
+            createDialog(new CalendarDialog(MainActivity.this, myCurrentTrip.getTripDates()
+                    , myCurrentTrip.getEvents()), OPEN_CALENDAR);
+            return;
+        }
+        if (myCurrentTrip.getTripDates() == null && myCurrentTrip.getEvents() == null) { // If I have nothing
+            Log.d(TAG, "openCalendar: Sending nothing");
+            createDialog(new CalendarDialog(MainActivity.this), OPEN_CALENDAR);
+            return;
+        }
+        if (myCurrentTrip.getTripDates() == null) { // if I have only events array
+            Log.d(TAG, "openCalendar: Sending only events array");
+            createDialog(new CalendarDialog(MainActivity.this, null
+                    , myCurrentTrip.getEvents()), OPEN_CALENDAR);
+            return;
+        }
+        if (myCurrentTrip.getEvents() == null) { // I have only trip dates array
+            Log.d(TAG, "openCalendar: Sending only tripDates array");
+            createDialog(new CalendarDialog(MainActivity.this, myCurrentTrip.getTripDates()
+                    , null), OPEN_CALENDAR);
+            return;
+        }
     }
 
     /**
@@ -329,12 +361,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Prague
 //        myLocationLatLng = new LatLng(50.0755, 14.4378);
         //Rio
-//        myLocationLatLng = new LatLng(-22.908333, -43.196388);
+        myLocationLatLng = new LatLng(-22.908333, -43.196388);
         //Tokyo
 //        myLocationLatLng = new LatLng(35.652832, 139.839478);
         //Real location
-        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-
+//        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+        //Marseille
+//        myLocationLatLng = new LatLng(43.2965,5.3698);
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
 
         initMyCurrentLocation();
@@ -342,7 +375,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel.setText("" + myCurrentTrip.getCity() + ", " + myCurrentTrip.getCountry());
 
         /** After we are done with location, find currency*/
-        getCurrency();
+        if (myCurrentTrip.getCurrencyCode().equalsIgnoreCase("eur")) { // The country is already EUR
+            Log.d(TAG, "updateUItoMatchLocation: Currency already eur, no need to convert");
+            currencyLabel.setText("Currency: EUR");
+            getLocationWeather();
+        } else
+            getCurrency();
     }
 
     /**
@@ -361,7 +399,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String currencyCode = countryCodeToCurrencyCode(countryCode);
             float currencyRate = 0;
             myCurrentTrip = new MyTrip(city, country, countryCode, currencyCode, currencyRate
-                    , null, null);
+                    , null, null, null);
         } catch (IOException e) {
             Log.d(TAG, "updateUItoMatchLocation: Problem: " + e.getMessage());
         }
@@ -374,10 +412,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "setFlagImage: Setting flag image to: " + countryCode);
         final int flag = World.getFlagOf(countryCode);
         //Set background to the given country image
-        ImageView backgroundImage = new ImageView(this);
-        backgroundImage.setImageAlpha(40);
-        backgroundImage.setImageResource(flag);
-        titleLayout.setBackground(backgroundImage.getDrawable());
+//        ImageView backgroundImage = new ImageView(this);
+//        backgroundImage.setImageAlpha(40);
+//        backgroundImage.setImageResource(flag);
+//        titleLayout.setBackground(backgroundImage.getDrawable());
+        ImageView flagImage = findViewById(R.id.main_IMG_flagImage);
+        flagImage.setImageResource(flag);
+        flagImage.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -461,8 +502,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onFailure(Request request, IOException e) {
                 Log.d(TAG, "onFailure: Request failed:" + e.getMessage());
                 //TODO: Check for last currency if available
-                currencyLabel.setText("N/A");
-                makeToast("Currency not available");
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        currencyLabel.setText("Currency not available");
+                        makeToast("Currency not available");
+                    }
+                });
                 getLocationWeather();
             }
 
@@ -514,8 +560,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onFailure(Request request, IOException e) {
                 Log.d(TAG, "onFailure: Request failed:" + e.getMessage());
                 //TODO: Check previous weather
-                weatherLabel.setText("N/A");
-                makeToast("Weather not available");
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        makeToast("Weather not available");
+                        weatherLabel.setText("Weather not available");
+                    }
+                });
                 checkForTripDetails();
             }
 
@@ -569,10 +620,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "checkForTripDetails: Checking if trip details are available");
         if (tripDetailsAvailableToLoad) {
             loadTripDetails();
+            releaseButtons();
         } else {
             //Trip details are not available, ask user to enter them
-            NewTripActivity newTripActivity = new NewTripActivity(MainActivity.this);
-            createDialog(newTripActivity, null);
+            createDialog(new NewTripActivity(MainActivity.this), NEW_TRIP_DIALOG);
         }
     }
 
@@ -637,8 +688,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
 
-        int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
-        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.65);
+        int width = 0;
+        int height = 0;
+        switch (val) {
+            case NEW_TRIP_DIALOG:
+                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.2);
+                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
+                break;
+            case OPEN_CALENDAR:
+                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.45);
+                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+                break;
+            case OPEN_NAVIGATION:
+                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.55);
+                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+                break;
+            case OPEN_TRANSLATOR:
+                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.75);
+                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+                break;
+        }
+
         dialog.getWindow().setLayout(width, height);
         dialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -651,16 +721,79 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * Get the dates list and trip name from new trip dialog
+     * A method to release the buttons
      */
-    @Override
-    public void getResult(List<Date> tripDates, String tripName) {
-
+    private void releaseButtons() {
         // Activate buttons after dialog
         openCalendarButton.setClickable(true);
         openMapButton.setClickable(true);
         openTranslatorButton.setClickable(true);
         openDirectionButton.setClickable(true);
+    }
+
+
+    /**
+     * Update dates label according to received dates
+     */
+    private void updateTripDatesLabel() {
+        //TODO: 1 day trip?
+        Log.d(TAG, "updateTripDatesLabel: Updating trip dates to: " + myCurrentTrip.getTripDates());
+        List<CalendarDay> tripDates = myCurrentTrip.getTripDates();
+        /** Check if the trip year start and end are the same
+         * check if trip month start and end are the same
+         */
+        CalendarDay startDay = tripDates.get(0);
+        CalendarDay endDay = tripDates.get(tripDates.size() - 1);
+        String dateText = "";
+        if (startDay.getYear() != endDay.getYear()) { // Trip ending on different years
+            dateText = startDay.getDay() + "/" + startDay.getMonth() + "/" + startDay.getYear() + " - "
+                    + endDay.getDay() + "/" + endDay.getMonth() + "/" + endDay.getYear();
+        } else {
+            if (startDay.getMonth() != endDay.getMonth()) { // Trip ending on different months
+                dateText = startDay.getDay() + "/" + startDay.getMonth() + " - "
+                        + endDay.getDay() + "/" + endDay.getMonth();
+            } else { // Trip in same month
+                dateText = startDay.getDay() + " - " + endDay.getDay() + "/" + startDay.getMonth();
+            }
+        }
+        tripDatesLabel.setText(dateText);
+        tripDatesLabel.setVisibility(View.VISIBLE);
+    }
+
+
+    /** ================== CALLBACKS ================*/
+
+    /**
+     * Callback method to get events array from calendar dialog
+     */
+    @Override
+    public void getEventsArray(List<MyEvent> tripEvents) {
+        if (tripEvents == null) {
+            Log.d(TAG, "getEventsArray: Got null events array");
+        } else {
+            Log.d(TAG, "getEventsArray: Got callback with: " + tripEvents.toString());
+            myCurrentTrip.setEvents(tripEvents);
+            if (tripEventsLabel.getVisibility() == View.INVISIBLE)
+                tripEventsLabel.setVisibility(View.VISIBLE);
+            String toLabel = "";
+            for (int i = 0; i < tripEvents.size(); i++) {
+                toLabel += tripEvents.get(i).getEventDetails() + " at: " + tripEvents.get(i).getEventDate() + "\n";
+            }
+            Log.d(TAG, "getEventsArray: Concatanating: " + toLabel);
+            tripEventsLabel.setText(toLabel);
+            //TODO: Display only closest event, do events button
+            //TODO: Sort
+            //TODO: list
+        }
+    }
+
+    /**
+     * Get the dates list and trip name from new trip dialog
+     */
+    @Override
+    public void getResult(List<CalendarDay> tripDates, String tripName) {
+
+        releaseButtons();
 
         if (tripDates == null && tripName == null) {
             Log.d(TAG, "getResult: Null results");
@@ -685,6 +818,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel.setText("" + tripName);
         welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
         tripDetailsLoaded = true;
+
+        updateTripDatesLabel();
     }
 }
 

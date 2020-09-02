@@ -25,8 +25,16 @@
             android:maxLines="1"
             android:text="Welcome to Israel!"
             android:textColor="@color/coolBlue"
-            android:textSize="50dp"
+            android:textSize="30dp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/main_IMG_flagImage"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="-70dp"
+            android:rotation="135"
+            android:scaleType="fitXY" />
 
     </RelativeLayout>
 
@@ -41,9 +49,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:text="1 EUR = X ILS"
-            android:textSize="30sp" />
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/main_LBL_weather"
@@ -51,21 +59,33 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/main_LBL_currencyLabel"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="5dp"
             android:layout_marginRight="20dp"
             android:text="31c Sunny"
-            android:textSize="20sp" />
+            android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/main_LBL_plansForToday"
+            android:id="@+id/main_LBL_tripdateslabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/main_LBL_weather"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="5dp"
             android:gravity="center"
-            android:text="Plans for today:\n - Jerusalem trip at 10am\n- Eilat bus at 19pm"
-            android:textSize="30sp" />
+            android:text="7-13 September"
+            android:textSize="15sp"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/main_LBL_tripEventsLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/main_LBL_tripdateslabel"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:textSize="15sp"
+            android:visibility="invisible" />
 
     </RelativeLayout>
 
