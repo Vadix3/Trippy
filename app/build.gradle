@@ -35,6 +35,8 @@ android {
 }
 
 dependencies {
+    api 'com.google.android.material:material:1.1.0-alpha06'
+
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'com.karumi:dexter:6.2.1'
     implementation 'androidx.appcompat:appcompat:1.2.0'

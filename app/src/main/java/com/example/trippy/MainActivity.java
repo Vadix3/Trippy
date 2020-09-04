@@ -3,6 +3,7 @@ package com.example.trippy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
@@ -16,7 +17,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -37,6 +37,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.squareup.okhttp.Callback;
@@ -55,8 +56,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
@@ -77,11 +78,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout mainLayout;
     private RelativeLayout titleLayout;
 
+    //Fragment
+    private EventsListFragment eventsListFragment;
+
     //Buttons
-    private Button openMapButton;
-    private Button openDirectionButton;
-    private Button openCalendarButton;
-    private Button openTranslatorButton;
+    private MaterialButton openMapButton;
+    private MaterialButton openDirectionButton;
+    private MaterialButton openCalendarButton;
+    private MaterialButton openTranslatorButton;
 
     //TextViews
     private TextView welcomeLabel;
@@ -149,7 +153,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         currencyLabel = findViewById(R.id.main_LBL_currencyLabel);
         weatherLabel = findViewById(R.id.main_LBL_weather);
         tripDatesLabel = findViewById(R.id.main_LBL_tripdateslabel);
-        tripEventsLabel = findViewById(R.id.main_LBL_tripEventsLabel);
+
+
+    }
+
+    /**
+     * A method to initialize the events list fragment
+     */
+    private void initEventsFragment() {
+        eventsListFragment = new EventsListFragment(myCurrentTrip.getEvents());
+        FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
+        transaction1.replace(R.id.main_LAY_eventsList, eventsListFragment);
+        transaction1.commit();
     }
 
     @Override
@@ -767,23 +782,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Callback method to get events array from calendar dialog
      */
     @Override
-    public void getEventsArray(List<MyEvent> tripEvents) {
+    public void getEventsArray(ArrayList<MyEvent> tripEvents) {
         if (tripEvents == null) {
             Log.d(TAG, "getEventsArray: Got null events array");
         } else {
             Log.d(TAG, "getEventsArray: Got callback with: " + tripEvents.toString());
             myCurrentTrip.setEvents(tripEvents);
-            if (tripEventsLabel.getVisibility() == View.INVISIBLE)
-                tripEventsLabel.setVisibility(View.VISIBLE);
-            String toLabel = "";
-            for (int i = 0; i < tripEvents.size(); i++) {
-                toLabel += tripEvents.get(i).getEventDetails() + " at: " + tripEvents.get(i).getEventDate() + "\n";
-            }
-            Log.d(TAG, "getEventsArray: Concatanating: " + toLabel);
-            tripEventsLabel.setText(toLabel);
+
             //TODO: Display only closest event, do events button
             //TODO: Sort
             //TODO: list
+            /**List fragment*/
+            initEventsFragment();
         }
     }
 
