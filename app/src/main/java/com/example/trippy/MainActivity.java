@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+//TODO:Deal with no internet problems. dont make user wait for response from server.
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
         , OnNewTripCallbackListener, OnCalendarDialogDismissedListener {
 
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * A method to open the translator activity
      */
     private void openTranslator() {
-        createDialog(new TranslationDialog(MainActivity.this), OPEN_TRANSLATOR);
+        createDialog(new TranslationDialog(MainActivity.this, myCurrentTrip.getCountryCode()), OPEN_TRANSLATOR);
     }
 
     /**
@@ -372,13 +373,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          * this should give the device a fake location
          * below a fake rio de janeiro location
          */
-
+        //Knabarovsk
+//        myLocationLatLng = new LatLng(48.4814, 135.0721);
         //Prague
 //        myLocationLatLng = new LatLng(50.0755, 14.4378);
+        //Berlin
+        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
-        myLocationLatLng = new LatLng(-22.908333, -43.196388);
-        //Tokyo
-//        myLocationLatLng = new LatLng(35.652832, 139.839478);
+//        myLocationLatLng = new LatLng(-22.908333, -43.196388);
+        //BangKok
+//        myLocationLatLng = new LatLng(13.7563, 100.5018);
         //Real location
 //        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
         //Marseille
@@ -621,6 +625,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     });
                 } catch (JSONException e) {
                     Log.d(TAG, "onResponse: Exception: " + e.getMessage());
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            weatherLabel.setGravity(Gravity.CENTER_HORIZONTAL);
+                            weatherLabel.setText("");
+                            makeSnackbar("Weather info anavailable", R.color.bpRed);
+                            checkForTripDetails();
+                        }
+                    });
                 }
             }
         });
