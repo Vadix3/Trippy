@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="5dp"
-    tools:context=".MainActivity">
+    tools:context=".Activities.MainActivity">
     <!-- TODO: Add timezone-->
     <RelativeLayout
         android:id="@+id/main_LAY_titleLayout"
@@ -23,18 +23,19 @@
             android:layout_marginTop="30dp"
             android:gravity="center"
             android:maxLines="1"
-            android:text="Welcome to Israel!"
+            android:text="Trippy"
             android:textColor="@color/coolBlue"
             android:textSize="30dp"
             android:textStyle="bold" />
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/main_IMG_flagImage"
-            android:layout_width="200dp"
-            android:layout_height="50dp"
-            android:layout_marginLeft="-70dp"
-            android:rotation="-45"
-            android:scaleType="fitXY" />
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="10dp"
+            android:layout_toLeftOf="@id/main_LBL_welcomeTo"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.SelectedCornerRadius" />
+
 
     </RelativeLayout>
 
@@ -51,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
-            android:text="1 EUR = X ILS"
+            android:text="Currency"
             android:textSize="15sp" />
 
         <TextView
@@ -62,7 +63,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
             android:layout_marginRight="20dp"
-            android:text="31c Sunny"
+            android:text="Weather"
             android:textSize="15sp" />
 
         <TextView

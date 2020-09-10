@@ -89,3 +89,4 @@ lint/tmp/
 
 # Secret files
 **/*/res/values/secrets.xml
+/app/

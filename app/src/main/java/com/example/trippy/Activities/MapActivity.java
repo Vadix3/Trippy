@@ -1,13 +1,20 @@
-package com.example.trippy;
+package com.example.trippy.Activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
 
+import com.example.trippy.Dialogs.PlaceDetailsDialog;
+import com.example.trippy.Fragments.SearchTypeFragment;
+import com.example.trippy.Interfaces.OnSearchTypeSelectedListener;
+import com.example.trippy.Objects.MyMarker;
+import com.example.trippy.R;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -22,7 +29,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -31,7 +41,6 @@ import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.TypeFilter;
 import com.google.android.libraries.places.api.net.FetchPlaceRequest;
 import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
@@ -40,21 +49,33 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import com.skyfishjy.library.RippleBackground;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,6 +106,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private static final float DEFAULT_ZOOM = 15f;
 
+    private String mySearchType = "";
+
+    /**
+     * A method to store marker with place
+     */
+    private ArrayList<MyMarker> myMarkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,9 +142,40 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "initViews: Initializing views");
         materialSearchBar = findViewById(R.id.contentMap_SBR_searchBar);
         btnFind = findViewById(R.id.contentMap_BTN_findButton);
+        btnFind.setClickable(false);
+        btnFind.setVisibility(View.GONE);
         rippleBackground = findViewById(R.id.contentMap_RPL_ripple);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MapActivity.this);
 
+        OnSearchTypeSelectedListener onSearchTypeSelectedListener = new OnSearchTypeSelectedListener() {
+            @Override
+            public void setSearchType(String searchType) {
+                Log.d(TAG, "setSearchType Callback: " + searchType);
+                mySearchType = searchType;
+                btnFind.setVisibility(View.VISIBLE);
+
+                /**
+                 style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+                 app:strokeColor="@color/colorPrimary"
+                 app:strokeWidth="1dp"
+                 */
+
+                if (searchType.equals("transit_station")) {
+                    btnFind.setText("Search for bus stations");
+                } else {
+                    btnFind.setText("Search for " + mySearchType + "s");
+                }
+
+
+            }
+        };
+        SearchTypeFragment searchTypeFragment = new SearchTypeFragment();
+        searchTypeFragment.setActivityCallBack(onSearchTypeSelectedListener);
+        FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
+        transaction1.replace(R.id.activityMap_LAY_buttonsFragment, searchTypeFragment);
+        transaction1.commit();
+
+        myMarkers = new ArrayList<>();
     }
 
     //I dont need to ask for location because of the start permission check
@@ -180,12 +238,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 Log.d(TAG, "onTextChanged: new prediction request");
+                LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
+                double tempLat = currentMarkerLocation.latitude;
+                double tempLon = currentMarkerLocation.longitude;
 
                 // Create a new predictions request and pass it to the places client
                 final FindAutocompletePredictionsRequest predictionsRequest
                         = FindAutocompletePredictionsRequest.builder()
-                        .setCountry("il")
-                        .setTypeFilter(TypeFilter.ADDRESS)
+                        .setOrigin(currentMarkerLocation)
                         .setSessionToken(token)
                         .setQuery(charSequence.toString())
                         .build();
@@ -309,16 +369,211 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * A method to search what the user wanted to find
      */
     private void searchForGivenPlacesAroundMe(View view) {
+        Log.d(TAG, "searchForGivenPlacesAroundMe: Ripple animation");
         LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
         rippleBackground.startRippleAnimation();
-        //TODO: API CALL
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                rippleBackground.stopRippleAnimation();
-            }
-        }, 3000);
+        openHttpRequestForPlaces(currentMarkerLocation);
     }
+
+    /**
+     * A method to open HTTP request for places around me
+     */
+    private void openHttpRequestForPlaces(LatLng currentMarkerLocation) {
+        Log.d(TAG, "openHttpRequestForPlaces: Searching for places around" +
+                currentMarkerLocation.toString());
+
+        int myRadius = 1500;
+        String placeType = mySearchType;
+        String baseUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=";
+        String tempLocation = "" + currentMarkerLocation.latitude + "," + "" + currentMarkerLocation.longitude;
+        String tempRadius = "&radius=" + myRadius;
+        String tempType = "&type=" + placeType;
+        String apiKey = "&key=" + getString(R.string.google_maps_api_key);
+
+        String url = baseUrl + tempLocation + tempRadius + tempType + apiKey;
+
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Log.d(TAG, "openHttpRequestForPlaces: Requesting:\n" + url);
+        Request request = new Request.Builder()
+                .url(url)
+                .header("Content-Type", "application/json")
+                .build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                Log.d(TAG, "onFailure: Request failed:" + e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MapActivity.this, "Couldn't fetch location, Please try again"
+                                , Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                Log.d(TAG, "onResponse: Request successful");
+                if (response == null) {
+                    Log.d(TAG, "onResponse: Response is null");
+                } else {
+                    String responseString = response.body().string();
+                    Log.d(TAG, "onResponse: success: " + responseString);
+                    try {
+                        
+
+                        JSONObject results = new JSONObject(responseString);
+                        JSONArray resultsArray = results.getJSONArray("results");
+                        ArrayList<JSONObject> placesJSON = new ArrayList<>();
+
+                        ArrayList<String> placesIDs = new ArrayList<>();
+                        ArrayList<Place> places = new ArrayList<>();
+
+                        for (int i = 0; i < resultsArray.length(); i++) {
+                            placesJSON.add((JSONObject) resultsArray.get(i));
+                            placesIDs.add((String) placesJSON.get(i).get("place_id"));
+                        }
+                        myMarkers.clear(); // Clear markers array
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mMap.clear();
+                            }
+                        });
+                        for (String id : placesIDs) {
+                            addPlaceToMap(id);
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Slightly delay the suggestions collapse so it wont show again
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        rippleBackground.stopRippleAnimation();
+                                    }
+                                }, 3000);
+                            }
+                        });
+
+                    } catch (JSONException e) {
+                        Log.d(TAG, "onResponse: Exception: " + e.getMessage());
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * A method to add fetched place to map
+     */
+    private void addPlaceToMap(final String placeID) {
+        // We are interested only in the lat and lng attributes of the place
+        List<Place.Field> placeField = Arrays.asList(Place.Field.values());
+
+        // Create a new fetch place request using the place ID and the relevant fields
+        FetchPlaceRequest fetchPlaceRequest = FetchPlaceRequest.builder(placeID, placeField).build();
+        Log.d(TAG, "OnItemClickListener: Trying to fetch placeID: " + placeID);
+        placesClient.fetchPlace(fetchPlaceRequest).addOnSuccessListener(new OnSuccessListener<FetchPlaceResponse>() {
+            @Override
+            public void onSuccess(FetchPlaceResponse fetchPlaceResponse) {
+                Place place = fetchPlaceResponse.getPlace();
+                Log.d(TAG, "onSuccess: Fetching successfull: " + place.toString());
+
+                addCustomMarkerToMap(place);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            // Failed to fetch the location
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: Fetching failed: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * A method to add the right marker to the map according to place type
+     */
+    private void addCustomMarkerToMap(Place place) {
+
+        String restaurantIcon = "menu";
+        String supermarketIcon = "cart";
+        String barIcon = "alcohol";
+        String busIcon = "travel";
+        String atmIcon = "atm";
+        String iconName = "";
+
+        switch (mySearchType) {
+            case "restaurant":
+                iconName = restaurantIcon;
+                break;
+            case "supermarket":
+                iconName = supermarketIcon;
+                break;
+            case "bar":
+                iconName = barIcon;
+                break;
+            case "transit_station":
+                iconName = busIcon;
+                break;
+            case "atm":
+                iconName = atmIcon;
+                break;
+        }
+        int icWidth = 100;
+        int icHeight = 100;
+        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources()
+                .getIdentifier(iconName, "drawable", getPackageName()));
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, icWidth, icHeight, false);
+
+        MarkerOptions tempMarkerOptions = new MarkerOptions()
+                .position(place.getLatLng())
+                .title(place.getName())
+                .snippet("Tap for info")
+                .icon(BitmapDescriptorFactory.fromBitmap(resizedBitmap));
+
+        Marker tempMarker = mMap.addMarker(tempMarkerOptions);
+
+        myMarkers.add(new MyMarker(tempMarker, place));
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                Log.d(TAG, "onInfoWindowClick: " + marker.getId());
+                Place selectedPlace = findMarkerByID(marker.getId());
+                Log.d(TAG, "onInfoWindowClick: Fetched place: " + selectedPlace.toString());
+                PlaceDetailsDialog placeDetailsDialog = new PlaceDetailsDialog(MapActivity.this
+                        , selectedPlace, placesClient, mySearchType);
+                createNewPlaceDetailsDialog(placeDetailsDialog);
+            }
+        });
+    }
+
+    /**
+     * Creates a new place details dialog
+     */
+    private void createNewPlaceDetailsDialog(PlaceDetailsDialog placeDetailsDialog) {
+        Log.d(TAG, "createNewPlaceDetailsDialog: Creating new places dialog");
+        placeDetailsDialog.show();
+        placeDetailsDialog.getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT
+                , WindowManager.LayoutParams.WRAP_CONTENT);
+        placeDetailsDialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        placeDetailsDialog.getWindow().setDimAmount(0.9f);
+    }
+
+    /**
+     * A method to find a place by marker ID
+     */
+    private Place findMarkerByID(String id) {
+        Place place = null;
+        for (MyMarker myMarker : myMarkers) {
+            if (myMarker.getMarker().getId().equals(id)) {
+                place = myMarker.getPlace();
+            }
+        }
+        return place;
+    }
+
 
     /**
      * A method to check if location is enabled or not
@@ -448,6 +703,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                                         , mLastKnownLocation.getLongitude()), DEFAULT_ZOOM);
                                 // Remove the updates so we wont keep getting location updates.
                                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+                                btnFind.setClickable(true);
                             }
                         };
                         fusedLocationProviderClient.requestLocationUpdates(locationRequest
@@ -502,4 +758,5 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+
 }

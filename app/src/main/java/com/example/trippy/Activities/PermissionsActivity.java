@@ -1,4 +1,4 @@
-package com.example.trippy;
+package com.example.trippy.Activities;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.example.trippy.R;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;

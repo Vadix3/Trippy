@@ -1,4 +1,4 @@
-package com.example.trippy;
+package com.example.trippy.Activities;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +23,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blongho.country_data.World;
+import com.bumptech.glide.Glide;
+import com.example.trippy.Dialogs.CalendarDialog;
+import com.example.trippy.Dialogs.NewTripDialog;
+import com.example.trippy.Dialogs.TranslationDialog;
+import com.example.trippy.Fragments.EventsListFragment;
+import com.example.trippy.Interfaces.OnCalendarDialogDismissedListener;
+import com.example.trippy.Interfaces.OnNewTripCallbackListener;
+import com.example.trippy.Objects.MyEvent;
+import com.example.trippy.Objects.MyTrip;
+import com.example.trippy.R;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -39,6 +49,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
@@ -58,7 +72,9 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //TODO:Deal with no internet problems. dont make user wait for response from server.
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
@@ -70,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String OPEN_CALENDAR = "addCalendarEvent";
     private static final String OPEN_TRANSLATOR = "openTranslator";
 
-
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
     private Toast toast;
     /**
      * Views
@@ -93,8 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView currencyLabel;
     private TextView weatherLabel;
     private TextView tripDatesLabel;
-    //TODO: Convert to fine list
-    private TextView tripEventsLabel;
     //ImageViews
 
     /**
@@ -122,11 +136,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainLayout = findViewById(R.id.main_LAY_mainlayout);
         makeSnackbar("Loading location data", R.color.coolBlue);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
+        fireBasePostTest();
+        fireBaseGetTest();
         isLocationEnabled();
         initViews();
         World.init(getApplicationContext());
 
 
+    }
+
+    private void fireBaseGetTest() {
+        db.collection("users")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d(TAG, document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.w(TAG, "Error getting documents.", task.getException());
+                        }
+                    }
+                });
+    }
+
+    private void fireBasePostTest() {
+        // Create a new user with a first and last name
+        Map<String, Object> user = new HashMap<>();
+        user.put("first", "Ada");
+        user.put("last", "Lovelace");
+        user.put("born", 1815);
+
+// Add a new document with a generated ID
+        db.collection("users")
+                .add(user)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document" + e.getMessage());
+                    }
+                });
     }
 
     /**
@@ -229,7 +286,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void openMap() {
         Intent intent = new Intent(MainActivity.this, MapActivity.class);
         startActivity(intent);
-
     }
 
 
@@ -373,20 +429,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          * this should give the device a fake location
          * below a fake rio de janeiro location
          */
-        //Knabarovsk
+        //Khabarovsk
 //        myLocationLatLng = new LatLng(48.4814, 135.0721);
         //Prague
-//        myLocationLatLng = new LatLng(50.0755, 14.4378);
+        myLocationLatLng = new LatLng(50.0755, 14.4378);
         //Berlin
-        myLocationLatLng = new LatLng(52.5200, 13.4050);
+//        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
 //        myLocationLatLng = new LatLng(-22.908333, -43.196388);
         //BangKok
 //        myLocationLatLng = new LatLng(13.7563, 100.5018);
+        //Marseilles
+//        myLocationLatLng = new LatLng(43.2965,5.3698);
         //Real location
 //        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-        //Marseille
-//        myLocationLatLng = new LatLng(43.2965,5.3698);
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
 
         initMyCurrentLocation();
@@ -430,12 +486,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void setFlagImage(String countryCode) {
         Log.d(TAG, "setFlagImage: Setting flag image to: " + countryCode);
         final int flag = World.getFlagOf(countryCode);
-        //Set background to the given country image
-//        ImageView backgroundImage = new ImageView(this);
-//        backgroundImage.setImageAlpha(40);
-//        backgroundImage.setImageResource(flag);
-//        titleLayout.setBackground(backgroundImage.getDrawable());
+
+
         ImageView flagImage = findViewById(R.id.main_IMG_flagImage);
+        Glide.with(flagImage).load(flag).into(flagImage);
         flagImage.setImageResource(flag);
         flagImage.setVisibility(View.VISIBLE);
     }
@@ -651,7 +705,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             releaseButtons();
         } else {
             //Trip details are not available, ask user to enter them
-            createDialog(new NewTripActivity(MainActivity.this), NEW_TRIP_DIALOG);
+            createDialog(new NewTripDialog(MainActivity.this), NEW_TRIP_DIALOG);
         }
     }
 

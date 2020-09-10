@@ -5,14 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="3dp"
-    tools:context=".MapActivity">
+    tools:context=".Activities.MapActivity">
 
     <TextView
+        android:id="@+id/map_LBL_headlineLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
-        android:text="Trippy app"
+        android:text="Map"
         android:textColor="@color/colorPrimary"
         android:textSize="50sp"
         android:textStyle="bold" />
@@ -21,21 +22,33 @@
         android:id="@+id/activityMap_LAY_mapLayout"
         android:layout_width="360dp"
         android:layout_height="630dp"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/activityMap_LAY_buttonsFragment"
+        android:layout_below="@id/map_LBL_headlineLabel"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp"
-        android:padding="1dp"
-        android:background="@color/quantum_black_100">
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="4dp"
+        android:background="@color/quantum_black_100"
+        android:padding="1dp">
 
         <include
             android:id="@+id/activityMap_FRG_mapFragment"
-            layout="@layout/content_map"
+            layout="@layout/places_map"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"/>
+            android:layout_centerVertical="true" />
+
 
     </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/activityMap_LAY_buttonsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/activityMap_LAY_mapLayout"
+        android:layout_alignEnd="@id/activityMap_LAY_mapLayout"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 
 
 </RelativeLayout>
