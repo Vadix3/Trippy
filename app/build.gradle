@@ -76,8 +76,11 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+    implementation 'com.facebook.android:facebook-android-sdk:5.15.3'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-
+    implementation 'com.google.android.gms:play-services-auth:18.1.0'
+    implementation 'com.github.Shashank02051997:FancyToast-Android:0.1.6'
+    implementation 'com.google.firebase:firebase-auth:19.4.0'
 
 }
 repositories {

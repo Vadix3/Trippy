@@ -41,6 +41,7 @@ import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
 import com.google.android.libraries.places.api.net.FetchPlaceRequest;
 import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
@@ -68,6 +69,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -103,6 +105,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private View mapView;
     private Button btnFind;
     private RippleBackground rippleBackground;
+    private ImageView centerMarker;
 
     private static final float DEFAULT_ZOOM = 15f;
 
@@ -146,6 +149,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         btnFind.setVisibility(View.GONE);
         rippleBackground = findViewById(R.id.contentMap_RPL_ripple);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MapActivity.this);
+        centerMarker = findViewById(R.id.contentMap_IMG_pin);
 
         OnSearchTypeSelectedListener onSearchTypeSelectedListener = new OnSearchTypeSelectedListener() {
             @Override
@@ -189,7 +193,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         // Init places
         initPlaces();
-        moveLocationButtonToBottom(); // Move location button to bottom of screen
+        moveMapButtons(); // Move location button to bottom of screen
         isLocationEnabled(); // Check for location toggle
     }
 
@@ -238,6 +242,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 Log.d(TAG, "onTextChanged: new prediction request");
+                centerMarker.setVisibility(View.VISIBLE);
                 LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
                 double tempLat = currentMarkerLocation.latitude;
                 double tempLon = currentMarkerLocation.longitude;
@@ -247,6 +252,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         = FindAutocompletePredictionsRequest.builder()
                         .setOrigin(currentMarkerLocation)
                         .setSessionToken(token)
+                        .setLocationBias(RectangularBounds.newInstance(
+                                new LatLng(tempLat, tempLon),
+                                new LatLng(tempLat, tempLon)))
                         .setQuery(charSequence.toString())
                         .build();
 
@@ -266,8 +274,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                                         predictionList = predictionsResponse.getAutocompletePredictions();
                                         List<String> suggestionsList = new ArrayList<>();
                                         Log.d(TAG, "onComplete: Converting predictions to strings");
-                                        for (AutocompletePrediction prediction : predictionList) {
-                                            suggestionsList.add(prediction.getFullText(null).toString());
+                                        for (int i = (predictionList.size() - 1); i >= 0; i--) {
+                                            suggestionsList.add(predictionList.get(i).getFullText(null).toString());
                                         }
                                         Log.d(TAG, "Ready predictions list: " + suggestionsList.toString());
                                         // List is complete, pass it to material search bar
@@ -321,7 +329,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 final String placeID = selectedPrediction.getPlaceId();
 
                 // We are interested only in the lat and lng attributes of the place
-                List<Place.Field> placeField = Arrays.asList(Place.Field.LAT_LNG);
+                List<Place.Field> placeField = Arrays.asList(Place.Field.values());
 
                 // Create a new fetch place request using the place ID and the relevant fields
                 FetchPlaceRequest fetchPlaceRequest = FetchPlaceRequest.builder(placeID, placeField).build();
@@ -331,9 +339,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     public void onSuccess(FetchPlaceResponse fetchPlaceResponse) {
                         Place place = fetchPlaceResponse.getPlace();
                         Log.d(TAG, "onSuccess: Fetching successfull: " + place.getLatLng().toString());
-                        LatLng placeLatLng = place.getLatLng();
-                        if (placeLatLng != null) {
-                            moveCamera(placeLatLng, DEFAULT_ZOOM);
+                        if (place != null) {
+                            mySearchType = "default";
+                            centerMarker.setVisibility(View.INVISIBLE);
+                            btnFind.setVisibility(View.INVISIBLE);
+                            addMarkerToMap(place);
+                            moveCamera(place.getLatLng(), DEFAULT_ZOOM);
                         }
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -370,6 +381,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private void searchForGivenPlacesAroundMe(View view) {
         Log.d(TAG, "searchForGivenPlacesAroundMe: Ripple animation");
+        centerMarker.setVisibility(View.VISIBLE);
         LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
         rippleBackground.startRippleAnimation();
         openHttpRequestForPlaces(currentMarkerLocation);
@@ -420,8 +432,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     String responseString = response.body().string();
                     Log.d(TAG, "onResponse: success: " + responseString);
                     try {
-                        
-
                         JSONObject results = new JSONObject(responseString);
                         JSONArray resultsArray = results.getJSONArray("results");
                         ArrayList<JSONObject> placesJSON = new ArrayList<>();
@@ -480,7 +490,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 Place place = fetchPlaceResponse.getPlace();
                 Log.d(TAG, "onSuccess: Fetching successfull: " + place.toString());
 
-                addCustomMarkerToMap(place);
+                addMarkerToMap(place);
 
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -495,7 +505,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     /**
      * A method to add the right marker to the map according to place type
      */
-    private void addCustomMarkerToMap(Place place) {
+    private void addMarkerToMap(Place place) {
 
         String restaurantIcon = "menu";
         String supermarketIcon = "cart";
@@ -520,21 +530,32 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             case "atm":
                 iconName = atmIcon;
                 break;
+            default:
+                iconName = "default";
+                break;
         }
         int icWidth = 100;
         int icHeight = 100;
-        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources()
-                .getIdentifier(iconName, "drawable", getPackageName()));
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, icWidth, icHeight, false);
+        Marker tempMarker = null;
+        if (!iconName.equals("default")) { // Add marker from relative search
+            Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources()
+                    .getIdentifier(iconName, "drawable", getPackageName()));
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, icWidth, icHeight, false);
 
-        MarkerOptions tempMarkerOptions = new MarkerOptions()
-                .position(place.getLatLng())
-                .title(place.getName())
-                .snippet("Tap for info")
-                .icon(BitmapDescriptorFactory.fromBitmap(resizedBitmap));
+            MarkerOptions tempMarkerOptions = new MarkerOptions()
+                    .position(place.getLatLng())
+                    .title(place.getName())
+                    .snippet("Tap for info")
+                    .icon(BitmapDescriptorFactory.fromBitmap(resizedBitmap));
+            tempMarker = mMap.addMarker(tempMarkerOptions);
 
-        Marker tempMarker = mMap.addMarker(tempMarkerOptions);
-
+        } else { // Add regular marker for specific place search
+            MarkerOptions tempMarkerOptions = new MarkerOptions()
+                    .position(place.getLatLng())
+                    .title(place.getName())
+                    .snippet("Tap for info");
+            tempMarker = mMap.addMarker(tempMarkerOptions);
+        }
         myMarkers.add(new MyMarker(tempMarker, place));
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
@@ -721,18 +742,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     /**
      * A method to move the location button the the bottom right of the screen
      */
-    private void moveLocationButtonToBottom() {
+    private void moveMapButtons() {
         Log.d(TAG, "moveLocationButtonToBottom: Moving location button to bottom");
-
         // Fetch the layout params of the location button
         if (mapView != null && mapView.findViewById(Integer.parseInt("1")) != null) {
             View locationButton = ((View) mapView.findViewById(Integer.parseInt("1"))
                     .getParent()).findViewById(Integer.parseInt("2"));
+
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
             layoutParams.addRule(RelativeLayout.ABOVE, btnFind.getId());
-            layoutParams.setMargins(0, 0, 40, 300);
+            layoutParams.setMargins(0, 0, 0, 270);
+
+            View toolbar = ((View) mapView.findViewById(Integer.parseInt("1")).
+                    getParent()).findViewById(Integer.parseInt("4"));
+
+            // and next place it, for example, on bottom right (as Google Maps app)
+            RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) toolbar.getLayoutParams();
+            // position on right bottom
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            rlp.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+            rlp.addRule(RelativeLayout.LEFT_OF, 0);
+            rlp.addRule(RelativeLayout.LEFT_OF, locationButton.getId());
+            rlp.setMargins(100, 0, 100, 270);
         }
     }
 

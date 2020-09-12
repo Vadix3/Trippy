@@ -10,6 +10,7 @@
     <style name="AppTheme.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:fontFamily">@font/montserrat_regular</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
@@ -17,10 +18,23 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 
-    <style name="ShapeAppearanceOverlay.App.SelectedCornerRadius" parent="">
-        <item name="cornerSizeTopRight">75dp</item>
-        <item name="cornerFamilyTopRight">rounded</item>
-        <item name="cornerSizeBottomLeft">75dp</item>
-        <item name="cornerFamilyBottomLeft">rounded</item>
+    <style name="ShapeAppearanceOverlay.App.CornerSize70Percent" parent="">
+        <item name="cornerSizeTopLeft">70%</item>
+        <item name="cornerSizeBottomLeft">70%</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.CornerSize10Percent" parent="">
+        <item name="cornerSizeTopLeft">50%</item>
+        <item name="cornerSizeBottomLeft">50%</item>
+        <item name="cornerSizeTopRight">50%</item>
+        <item name="cornerSizeBottomRight">50%</item>
+    </style>
+
+    <style name="TextAppearance.App.CollapsingToolbar.Expanded" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+    </style>
+
+    <style name="TextAppearance.App.CollapsingToolbar.Collapsed" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
     </style>
 </resources>
