@@ -30,6 +30,8 @@ import android.widget.Toast;
 import com.blongho.country_data.World;
 import com.bumptech.glide.Glide;
 import com.example.trippy.Dialogs.CalendarDialog;
+import com.example.trippy.Dialogs.NewAccountDialog;
+import com.example.trippy.Dialogs.NewCountryDialog;
 import com.example.trippy.Dialogs.NewTripDialog;
 import com.example.trippy.Dialogs.TranslationDialog;
 import com.example.trippy.Fragments.CurrencyFragment;
@@ -37,10 +39,13 @@ import com.example.trippy.Fragments.EventsListFragment;
 import com.example.trippy.Fragments.WeatherFragment;
 import com.example.trippy.Interfaces.OnCalendarDialogDismissedListener;
 import com.example.trippy.Interfaces.OnNewTripCallbackListener;
+import com.example.trippy.Interfaces.OnSelectedCountryListener;
 import com.example.trippy.Objects.MyEvent;
 import com.example.trippy.Objects.MyTrip;
 import com.example.trippy.Objects.MyUser;
 import com.example.trippy.R;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -55,14 +60,19 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firestore.v1.WriteResult;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
@@ -89,7 +99,7 @@ import java.util.Map;
 
 //TODO:Deal with no internet problems. dont make user wait for response from server.
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
-        , OnNewTripCallbackListener, OnCalendarDialogDismissedListener {
+        , OnNewTripCallbackListener, OnCalendarDialogDismissedListener, OnSelectedCountryListener {
 
     private static final String TAG = "pttt";
     private static final String NEW_TRIP_DIALOG = "newTripDialog";
@@ -98,12 +108,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String OPEN_TRANSLATOR = "openTranslator";
     private static final String DEFAULT_CURRENCY = "EUR";
 
-    private static final int EMAIL_LOGIN = 0;
-    private static final int GOOGLE_LOGIN = 1;
-    private static final int FACEBOOK_LOGIN = 2;
+    public static final int EMAIL_LOGIN = 0;
+    public static final int GOOGLE_LOGIN = 1;
+    public static final int FACEBOOK_LOGIN = 2;
 
 
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
     private Toast toast;
     /**
      * Views
@@ -130,7 +139,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //ImageViews
 
-
+    //Other
+    MaterialToolbar materialToolbar;
     /**
      * Location
      */
@@ -150,6 +160,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // If user loaded / created trip details
     private boolean tripDetailsLoaded = false;
 
+
+    /**
+     * Login stuff
+     */
+    private FirebaseAuth mAuth;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -158,29 +176,109 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         makeSnackbar("Loading location data", R.color.coolBlue);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         getUserDataFromLogin(getIntent().getIntExtra("loginCode", 0));
-        isLocationEnabled();
-        initViews();
-        World.init(getApplicationContext());
     }
 
     /**
      * A method to get the users name and email from login
      */
     private void getUserDataFromLogin(int loginCode) {
-        Log.d(TAG, "getUserDataFromLogin: Getting users data. Login code: " + loginCode);
+        //FireBase
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        //Login
+        GoogleSignInAccount googleAccount = GoogleSignIn.getLastSignedInAccount(this);
+
+        String userEmail = "";
+        String displayName = "";
+        /** If the user logged in with email than the details are in firebase already.
+         *  if the user logged in using google or facebook, he may log in without the data
+         *  being in firestore.
+         *  Therefore we need to extract display name and email.
+         *  if the email exists in firestore, get data.
+         *  if not, prompt user to set the country, add to the user object and save in firestore.
+         */
+        switch (loginCode) {
+            case EMAIL_LOGIN:
+                displayName = user.getDisplayName();
+                userEmail = user.getEmail();
+                Log.d(TAG, "getUserDataFromLogin: " + userEmail
+                        + " Logged in with password");
+                break;
+            case GOOGLE_LOGIN:
+                displayName = googleAccount.getDisplayName();
+                userEmail = googleAccount.getEmail();
+                Log.d(TAG, "getUserDataFromLogin: Name: " + displayName + " Email:" + userEmail
+                        + " Logged in with Google");
+                break;
+            case FACEBOOK_LOGIN:
+                displayName = getIntent().getStringExtra("name");
+                userEmail = getIntent().getStringExtra("email");
+                Log.d(TAG, "getUserDataFromLogin: Name: " + displayName + " Email:" + userEmail
+                        + " Logged in with Facebook");
+                break;
+        }
+        fetchUserFromFirestore(displayName, userEmail);
+    }
+
+    /**
+     * Fetch the user using email from firestore
+     */
+    private void fetchUserFromFirestore(String displayName, String userEmail) {
+        Log.d(TAG, "fetchUserFromFirestore: Fetching user from " + "users/" + userEmail);
+        DocumentReference docRef = db.document("users/" + userEmail);
+//        DocumentReference docRef = db.document("users/vadix1@gmail.com");
+
+        docRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if (documentSnapshot.exists()) {
+                    Log.d(TAG, "onSuccess: user exists!");
+                    myUser = documentSnapshot.toObject(MyUser.class);
+                    Log.d(TAG, "onSuccess: Got user: " + myUser.toString());
+                    isLocationEnabled();
+                    initViews();
+                    World.init(getApplicationContext());
+                } else {
+                    Log.d(TAG, "onSuccess: Document does not exist! Prompt enter country");
+                    getUserCountry(displayName, userEmail);
+                }
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: Exception: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * A user chose to log in using facebook / google, and the user does not exist in firestore.
+     * I can get the users name, lastname and email, But I need the users country to complete the
+     * user object. This method will ask the user to select country of origin to complete object.
+     * The method will get the country & currency codes accordingly.
+     * TODO: Get country and currency codes ********************************
+     */
+    private void getUserCountry(String displayName, String userEmail) {
+        Log.d(TAG, "getUserCountry: Asking user to enter country");
+
+        String arr[] = displayName.split(" ", 2);
+
+        String tempName = arr[0];
+        String tempLastName = arr[1];
+
+        myUser = new MyUser(tempName, tempLastName, userEmail, "", "Counry"
+                , "CountryCode", "CurrencyCode", 0);
 
 
-        String usersName = getIntent().getStringExtra("name");
-        String usersEmail = getIntent().getStringExtra("email");
-
-        String[] arr = usersName.split(" ", 2);
-
-        //TODO: Search for details?
-        //TODO: Change default currency somehow
-        myUser = new MyUser(arr[0], arr[1], usersEmail,""
-                , "", "", DEFAULT_CURRENCY, 0);
-        Log.d(TAG, "getUserDataFromLogin: MyUser: " + myUser.getFirstMame() + " , "
-                + myUser.getLastName() + " , " + myUser.getEmailAddress());
+        NewCountryDialog newCountryDialog = new NewCountryDialog(this);
+        newCountryDialog.show();
+        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.4);
+        int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+        newCountryDialog.getWindow().setLayout(width, height);
+        newCountryDialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        newCountryDialog.getWindow().setDimAmount(0.9f);
     }
 
     private void fireBaseGetTest() {
@@ -200,29 +298,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-    private void fireBasePostTest() {
-        // Create a new user with a first and last name
-        Map<String, Object> user = new HashMap<>();
-        user.put("first", "Ada");
-        user.put("last", "Lovelace");
-        user.put("born", 1815);
-
-// Add a new document with a generated ID
-        db.collection("users")
-                .add(user)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document" + e.getMessage());
-                    }
-                });
-    }
 
     /**
      * A method to init Views
@@ -249,6 +324,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         titleLayout = findViewById(R.id.main_LAY_titleLayout);
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
+
+        materialToolbar = findViewById(R.id.main_LAY_MaterialToolBar);
+        materialToolbar.setTitle("Hello " + myUser.getFirstMame() + "!");
     }
 
     /**
@@ -472,7 +550,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Berlin
 //        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
-//        myLocationLatLng = new LatLng(-22.908333, -43.196388);
+        myLocationLatLng = new LatLng(-22.908333, -43.196388);
         //BangKok
 //        myLocationLatLng = new LatLng(13.7563, 100.5018);
         //Marseilles
@@ -480,7 +558,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Barcelona
 //        myLocationLatLng = new LatLng(41.3851, 2.1734);
         //Real location
-        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+//        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
 
         initMyCurrentLocation();
@@ -579,6 +657,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private String getValueFromJsonString(String jsonString, String key, String param) {
         Log.d(TAG, "getValueFromJsonString: Getting " + key + " with param " + param + " from " + jsonString);
+        //TODO: Albania money does not work
         String val = "";
         try {
             JSONObject obj = new JSONObject(jsonString);
@@ -988,6 +1067,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tripDetailsLoaded = true;
 
         updateTripDatesLabel();
+    }
+
+    /**
+     * A method to get the selected country from user
+     */
+    @Override
+    public void getSelectedCountry(String country) {
+        Log.d(TAG, "getSelectedCountry: User selected country: " + country);
+        myUser.setCountry(country);
+        getCountryStuff(country);
+    }
+
+    /**
+     * A method to get country details
+     */
+    private void getCountryStuff(String country) {
+        Log.d(TAG, "getCountryStuff: Got country to get stuff: " + country);
+        try {
+            String countryCodeString = readJsonFromRaw(R.raw.countries);
+            String currencyCodeString = readJsonFromRaw(R.raw.currency);
+            JSONArray countryCodeJson = new JSONArray(countryCodeString);
+            JSONObject currencyCodeJson = new JSONObject(currencyCodeString);
+            for (int i = 0; i < countryCodeJson.length(); i++) {
+                JSONObject temp = (JSONObject) countryCodeJson.get(i);
+                if (temp.get("name").toString().equalsIgnoreCase(country)) {
+                    Log.d(TAG, "getCountryStuff: Found country name: " + country);
+                    myUser.setCountryCode(temp.get("code").toString());
+                    Log.d(TAG, "getCountryStuff: Set country code: " + myUser.getCountryCode());
+                }
+            }
+            myUser.setCurrencyCode(currencyCodeJson.get(myUser.getCountryCode()).toString());
+            Log.d(TAG, "getCountryStuff: Got currency code: " + myUser.getCurrencyCode());
+            // Done dealing with country stuff
+
+        } catch (IOException | JSONException e) {
+            Log.d(TAG, "countryCodeToCurrencyCode: Couldnt parse json from raw: " + e.getMessage());
+        }
+        isLocationEnabled();
+        initViews();
+        World.init(getApplicationContext());
     }
 }
 
