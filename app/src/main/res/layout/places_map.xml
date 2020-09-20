@@ -29,16 +29,14 @@
         app:mt_placeholder="Search a place!"
         app:mt_speechMode="false" />
 
-    <Button
-        android:id="@+id/contentMap_BTN_findButton"
+    <FrameLayout
+        android:id="@+id/contentMap_LAY_buttonsFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
-        android:background="@color/colorPrimary"
-        android:text="Navigate to location"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp" />
 
     <com.skyfishjy.library.RippleBackground xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"

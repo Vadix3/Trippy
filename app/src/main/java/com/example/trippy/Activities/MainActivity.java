@@ -2,15 +2,14 @@ package com.example.trippy.Activities;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-import androidx.core.util.Pair;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Address;
@@ -19,8 +18,8 @@ import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -30,12 +29,13 @@ import android.widget.Toast;
 import com.blongho.country_data.World;
 import com.bumptech.glide.Glide;
 import com.example.trippy.Dialogs.CalendarDialog;
-import com.example.trippy.Dialogs.NewAccountDialog;
 import com.example.trippy.Dialogs.NewCountryDialog;
 import com.example.trippy.Dialogs.NewTripDialog;
 import com.example.trippy.Dialogs.TranslationDialog;
+import com.example.trippy.Fragments.CalendarFragment;
 import com.example.trippy.Fragments.CurrencyFragment;
 import com.example.trippy.Fragments.EventsListFragment;
+import com.example.trippy.Fragments.TranslatorFragment;
 import com.example.trippy.Fragments.WeatherFragment;
 import com.example.trippy.Interfaces.OnCalendarDialogDismissedListener;
 import com.example.trippy.Interfaces.OnNewTripCallbackListener;
@@ -61,18 +61,14 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firestore.v1.WriteResult;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
@@ -93,13 +89,12 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 //TODO:Deal with no internet problems. dont make user wait for response from server.
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
-        , OnNewTripCallbackListener, OnCalendarDialogDismissedListener, OnSelectedCountryListener {
+        , OnNewTripCallbackListener, OnCalendarDialogDismissedListener, OnSelectedCountryListener
+        , NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "pttt";
     private static final String NEW_TRIP_DIALOG = "newTripDialog";
@@ -121,17 +116,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout mainLayout;
     private RelativeLayout titleLayout;
     private LinearLayout currencyWeatherLayout;
+    private DrawerLayout drawerLayout;
 
-    //Fragment
-    private EventsListFragment eventsListFragment;
     private WeatherFragment weatherFragment;
     private CurrencyFragment currencyFragment;
 
-    //Buttons
-    private MaterialButton openMapButton;
-    private MaterialButton openDirectionButton;
-    private MaterialButton openCalendarButton;
-    private MaterialButton openTranslatorButton;
 
     //TextViews
     private TextView welcomeLabel;
@@ -140,7 +129,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //ImageViews
 
     //Other
-    MaterialToolbar materialToolbar;
+    private MaterialToolbar materialToolbar;
+    private NavigationView navigationView;
     /**
      * Location
      */
@@ -167,6 +157,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseAuth mAuth;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    @Override
+    protected void onResume() {
+        if (navigationView != null) {
+            navigationView.setCheckedItem(R.id.nav_home);
+        }
+        super.onResume();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -227,7 +224,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void fetchUserFromFirestore(String displayName, String userEmail) {
         Log.d(TAG, "fetchUserFromFirestore: Fetching user from " + "users/" + userEmail);
         DocumentReference docRef = db.document("users/" + userEmail);
-//        DocumentReference docRef = db.document("users/vadix1@gmail.com");
 
         docRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
@@ -274,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         NewCountryDialog newCountryDialog = new NewCountryDialog(this);
         newCountryDialog.show();
+        //TODO: Make new country dialog not cancellable
         int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.4);
         int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
         newCountryDialog.getWindow().setLayout(width, height);
@@ -281,80 +278,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         newCountryDialog.getWindow().setDimAmount(0.9f);
     }
 
-    private void fireBaseGetTest() {
-        db.collection("users")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
-                        }
-                    }
-                });
-    }
-
-
     /**
      * A method to init Views
      */
     private void initViews() {
-
-        openMapButton = findViewById(R.id.main_BTN_openMap);
-        openMapButton.setOnClickListener(this);
-        openCalendarButton = findViewById(R.id.main_BTN_addCalenderEvent);
-        openCalendarButton.setOnClickListener(this);
-        openDirectionButton = findViewById(R.id.main_BTN_directions);
-        openDirectionButton.setOnClickListener(this);
-        openTranslatorButton = findViewById(R.id.main_BTN_Translator);
-        openTranslatorButton.setOnClickListener(this);
-
+        Log.d(TAG, "initViews: Initing views");
         currencyWeatherLayout = findViewById(R.id.main_LAY_currencyWeatherLayout);
         currencyWeatherLayout.setVisibility(View.GONE);
-
-        // Activate buttons before dialog
-        openCalendarButton.setClickable(false);
-        openMapButton.setClickable(false);
-        openTranslatorButton.setClickable(false);
-        openDirectionButton.setClickable(false);
-
+        drawerLayout = findViewById(R.id.main_LAY_mainDrawerlayout);
+        navigationView = findViewById(R.id.main_NAV_navigationView);
         titleLayout = findViewById(R.id.main_LAY_titleLayout);
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
-
         materialToolbar = findViewById(R.id.main_LAY_MaterialToolBar);
+
+        setToolbarStuff();
+    }
+
+    /**
+     * A method to initialize the toolbar options
+     */
+    private void setToolbarStuff() {
+        Log.d(TAG, "setToolbarStuff: Creating toolbar options");
+        navigationView.bringToFront();
         materialToolbar.setTitle("Hello " + myUser.getFirstMame() + "!");
+        setSupportActionBar(materialToolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, materialToolbar
+                , R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setCheckedItem(R.id.nav_home);
+
+        initCalendarFragment();
+        initTranslatorFragment();
+//        Menu menu = navigationView.getMenu();
+//        menu.findItem(R.id.nav_profile).setVisible(false);
+    }
+
+    /**
+     * A method to initialize the translator fragment
+     */
+    private void initTranslatorFragment() {
+        Log.d(TAG, "initTranslatorFragment: Creating translator fragment");
+        TranslatorFragment translatorFragment = new TranslatorFragment(myUser.getCountryCode());
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.main_LAY_translate, translatorFragment);
+        transaction.commit();
+
     }
 
     /**
      * A method to initialize the events list fragment
      */
     private void initEventsFragment() {
-        eventsListFragment = new EventsListFragment(myCurrentTrip.getEvents());
-        FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
-        transaction1.replace(R.id.main_LAY_eventsList, eventsListFragment);
-        transaction1.commit();
+        Log.d(TAG, "initEventsFragment: Creating events fragment");
+        //Fragment
+        EventsListFragment eventsListFragment = new EventsListFragment(myCurrentTrip.getEvents());
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.main_LAY_eventsList, eventsListFragment);
+        transaction.commit();
     }
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.main_BTN_addCalenderEvent:
-                openCalendar();
-                break;
-            case R.id.main_BTN_openMap:
-                openMap();
-                break;
-            case R.id.main_BTN_directions:
-                makeToast("Opening directions map");
-                break;
-            case R.id.main_BTN_Translator:
-                openTranslator();
-                break;
-        }
     }
 
     /**
@@ -550,7 +536,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Berlin
 //        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
-        myLocationLatLng = new LatLng(-22.908333, -43.196388);
+//        myLocationLatLng = new LatLng(-22.908333, -43.196388);
         //BangKok
 //        myLocationLatLng = new LatLng(13.7563, 100.5018);
         //Marseilles
@@ -558,7 +544,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Barcelona
 //        myLocationLatLng = new LatLng(41.3851, 2.1734);
         //Real location
-//        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
 
         initMyCurrentLocation();
@@ -566,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel.setText("" + myCurrentTrip.getCity() + ", " + myCurrentTrip.getCountry());
 
         /** After we are done with location, find currency*/
-        Log.d(TAG, "updateUItoMatchLocation: EUR currency, convert my currency to eur");
+        Log.d(TAG, "updateUItoMatchLocation: USD currency, convert my currency to usd");
         getCurrency();
     }
 
@@ -681,7 +667,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
-                .url(getString(R.string.currency_converter_url))
+                .url(getString(R.string.currency_converter_new_url))
                 .header("Content-Type", "application/json")
                 .build();
         okHttpClient.newCall(request).enqueue(new Callback() {
@@ -711,25 +697,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     String responseString = response.body().string();
                     String src = "";
                     String dst = "";
-                    if (!myUser.getCurrencyCode().equalsIgnoreCase("eur")) {
-                        Log.d(TAG, "onResponse: My currency is not eur");
+                    if (!myUser.getCurrencyCode().equalsIgnoreCase("usd")) {
+                        Log.d(TAG, "onResponse: My currency is not usd");
                         src = getValueFromJsonString(responseString
                                 , myUser.getCurrencyCode(), "rates");
                         myUser.setCurrencyRate(Float.parseFloat(src));
 
                     } else {
-                        Log.d(TAG, "onResponse: My currency is eur");
+                        Log.d(TAG, "onResponse: My currency is usd");
                         myUser.setCurrencyRate(1f);
                     }
 
 
-                    if (!myCurrentTrip.getCurrencyCode().equalsIgnoreCase("eur")) {
-                        Log.d(TAG, "onResponse: Target currency is not eur");
+                    if (!myCurrentTrip.getCurrencyCode().equalsIgnoreCase("usd")) {
+                        Log.d(TAG, "onResponse: Target currency is not usd");
                         dst = getValueFromJsonString(responseString
                                 , myCurrentTrip.getCurrencyCode(), "rates");
                         myCurrentTrip.setCurrencyRate(Float.parseFloat(dst));
                     } else {
-                        Log.d(TAG, "onResponse: Target currency is eur");
+                        Log.d(TAG, "onResponse: Target currency is usd");
                         myCurrentTrip.setCurrencyRate(1f);
                     }
 
@@ -847,7 +833,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "checkForTripDetails: Checking if trip details are available");
         if (tripDetailsAvailableToLoad) {
             loadTripDetails();
-            releaseButtons();
+            initMainCards();
+            saveUserToFirestore();
         } else {
             //Trip details are not available, ask user to enter them
             createDialog(new NewTripDialog(MainActivity.this), NEW_TRIP_DIALOG);
@@ -919,8 +906,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int height = 0;
         switch (val) {
             case NEW_TRIP_DIALOG:
-                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.2);
-                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
+                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.3);
+                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
                 break;
             case OPEN_CALENDAR:
                 height = (int) (getResources().getDisplayMetrics().heightPixels * 0.45);
@@ -941,20 +928,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * A method to release the buttons
+     * A method to init main view cards
      */
-    private void releaseButtons() {
-        // Activate buttons after dialog
-        openCalendarButton.setClickable(true);
-        openMapButton.setClickable(true);
-        openTranslatorButton.setClickable(true);
-        openDirectionButton.setClickable(true);
-
-
+    private void initMainCards() {
+        Log.d(TAG, "initMainCards: Initializing cards");
         /**Cards*/
 
         MaterialCardView weatherCard = findViewById(R.id.weatherfragment_LAY_cardview);
         MaterialCardView currencyCard = findViewById(R.id.currencyFragment_LAY_cardview);
+        MaterialCardView calendarCard = findViewById(R.id.calendarFragment_LAY_cardview);
 
         currencyCard.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -968,7 +950,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 openWeatherDerailsDialog();
             }
         });
+        calendarCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openCalendarDialog();
+            }
+        });
+    }
 
+    /**
+     * A method to open calendar events dialog
+     */
+    private void openCalendarDialog() {
+        Log.d(TAG, "openCalendarDialog: Opening calendar dialog");
     }
 
     /**
@@ -983,33 +977,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void openWeatherDerailsDialog() {
         Log.d(TAG, "openCurrencyEditDialog: Opening weather forecast dialog");
-    }
-
-
-    /**
-     * Update dates label according to received dates
-     */
-    private void updateTripDatesLabel() {
-        //TODO: 1 day trip?
-        Log.d(TAG, "updateTripDatesLabel: Updating trip dates to: " + myCurrentTrip.getTripDates());
-        List<CalendarDay> tripDates = myCurrentTrip.getTripDates();
-        /** Check if the trip year start and end are the same
-         * check if trip month start and end are the same
-         */
-        CalendarDay startDay = tripDates.get(0);
-        CalendarDay endDay = tripDates.get(tripDates.size() - 1);
-        String dateText = "";
-        if (startDay.getYear() != endDay.getYear()) { // Trip ending on different years
-            dateText = startDay.getDay() + "/" + startDay.getMonth() + "/" + startDay.getYear() + " - "
-                    + endDay.getDay() + "/" + endDay.getMonth() + "/" + endDay.getYear();
-        } else {
-            if (startDay.getMonth() != endDay.getMonth()) { // Trip ending on different months
-                dateText = startDay.getDay() + "/" + startDay.getMonth() + " - "
-                        + endDay.getDay() + "/" + endDay.getMonth();
-            } else { // Trip in same month
-                dateText = startDay.getDay() + " - " + endDay.getDay() + "/" + startDay.getMonth();
-            }
-        }
     }
 
 
@@ -1031,7 +998,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //TODO: list
             /**List fragment*/
             initEventsFragment();
+
         }
+    }
+
+    /**
+     * A method to initialize the calendar fragment
+     */
+    private void initCalendarFragment() {
+        Log.d(TAG, "initCalendarFragment: Creating calendar fragment");
+        CalendarFragment calendarFragment = new CalendarFragment();
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.main_LAY_calendar, calendarFragment);
+        transaction.commit();
     }
 
     /**
@@ -1040,18 +1019,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void getResult(List<CalendarDay> tripDates, String tripName) {
 
-        releaseButtons();
+        initMainCards();
 
         if (tripDates == null && tripName == null) {
             Log.d(TAG, "getResult: Null results");
+            saveUserToFirestore();
             return;
         }
         if (tripDates == null) {
             Log.d(TAG, "getResult: Null tripDates");
+            saveUserToFirestore();
             return;
         }
         if (tripName == null) {
             Log.d(TAG, "getResult: Null tripName");
+            saveUserToFirestore();
             return;
         }
 
@@ -1065,8 +1047,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel.setText("" + tripName);
         welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
         tripDetailsLoaded = true;
-
-        updateTripDatesLabel();
+        saveUserToFirestore();
     }
 
     /**
@@ -1080,7 +1061,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * A method to get country details
+     * A method to get country details after user logged in using google or facebook
      */
     private void getCountryStuff(String country) {
         Log.d(TAG, "getCountryStuff: Got country to get stuff: " + country);
@@ -1099,7 +1080,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             myUser.setCurrencyCode(currencyCodeJson.get(myUser.getCountryCode()).toString());
             Log.d(TAG, "getCountryStuff: Got currency code: " + myUser.getCurrencyCode());
-            // Done dealing with country stuff
 
         } catch (IOException | JSONException e) {
             Log.d(TAG, "countryCodeToCurrencyCode: Couldnt parse json from raw: " + e.getMessage());
@@ -1107,6 +1087,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         isLocationEnabled();
         initViews();
         World.init(getApplicationContext());
+    }
+
+
+    /**
+     * A method to save a new user that logged in using facebook or google to firestore
+     */
+    private void saveUserToFirestore() {
+        Log.d(TAG, "saveNewUserToFirestore: Saving user: " + myUser.toString());
+        String emailID = myUser.getEmailAddress();
+        db.collection("users")
+                .document(emailID)
+                .set(myUser)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "onSuccess: User saved successfully!");
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: Exception: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        Log.d(TAG, "onNavigationItemSelected: Item selected: " + item.getTitle());
+        switch (item.getItemId()) {
+            case R.id.nav_map:
+                openMap();
+                break;
+            case R.id.nav_calendar:
+                openCalendar();
+                break;
+            case R.id.nav_translate:
+                openTranslator();
+                break;
+            case R.id.nav_logout:
+                makeToast("Logging out");
+                break;
+            case R.id.nav_share:
+                makeToast("Opening share");
+                break;
+            case R.id.nav_rate:
+                makeToast("Moving to rate");
+                break;
+            case R.id.nav_home:
+                makeToast("Moving home");
+                break;
+        }
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
     }
 }
 

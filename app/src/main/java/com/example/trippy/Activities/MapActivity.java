@@ -47,6 +47,8 @@ import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.navigation.NavigationView;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import com.skyfishjy.library.RippleBackground;
@@ -57,7 +59,10 @@ import com.squareup.okhttp.Response;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Handler;
@@ -65,10 +70,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -83,7 +90,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "pttt";
 
@@ -103,18 +110,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private MaterialSearchBar materialSearchBar;
     private View mapView;
-    private Button btnFind;
     private RippleBackground rippleBackground;
     private ImageView centerMarker;
-
+    private FrameLayout searchTypeLayout;
     private static final float DEFAULT_ZOOM = 15f;
 
     private String mySearchType = "";
+
+    //Other
+    private MaterialToolbar materialToolbar;
+    private NavigationView navigationView;
+    private DrawerLayout drawerLayout;
 
     /**
      * A method to store marker with place
      */
     private ArrayList<MyMarker> myMarkers;
+    private Toast toast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,10 +155,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private void initViews() {
         Log.d(TAG, "initViews: Initializing views");
+
+        drawerLayout = findViewById(R.id.map_LAY_mainDrawerlayout);
+        materialToolbar = findViewById(R.id.map_LAY_MaterialToolBar);
+        navigationView = findViewById(R.id.map_NAV_navigationView);
+
         materialSearchBar = findViewById(R.id.contentMap_SBR_searchBar);
-        btnFind = findViewById(R.id.contentMap_BTN_findButton);
-        btnFind.setClickable(false);
-        btnFind.setVisibility(View.GONE);
         rippleBackground = findViewById(R.id.contentMap_RPL_ripple);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MapActivity.this);
         centerMarker = findViewById(R.id.contentMap_IMG_pin);
@@ -156,30 +170,47 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             public void setSearchType(String searchType) {
                 Log.d(TAG, "setSearchType Callback: " + searchType);
                 mySearchType = searchType;
-                btnFind.setVisibility(View.VISIBLE);
+
+                searchForGivenPlacesAroundMe();
 
                 /**
                  style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
                  app:strokeColor="@color/colorPrimary"
                  app:strokeWidth="1dp"
                  */
-
-                if (searchType.equals("transit_station")) {
-                    btnFind.setText("Search for bus stations");
-                } else {
-                    btnFind.setText("Search for " + mySearchType + "s");
-                }
-
-
             }
         };
+
+        searchTypeLayout = findViewById(R.id.contentMap_LAY_buttonsFragment);
         SearchTypeFragment searchTypeFragment = new SearchTypeFragment();
         searchTypeFragment.setActivityCallBack(onSearchTypeSelectedListener);
         FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
-        transaction1.replace(R.id.activityMap_LAY_buttonsFragment, searchTypeFragment);
+        transaction1.replace(R.id.contentMap_LAY_buttonsFragment, searchTypeFragment);
         transaction1.commit();
-
         myMarkers = new ArrayList<>();
+
+        setToolbarStuff();
+    }
+
+
+    /**
+     * A method to initialize the toolbar options
+     */
+    private void setToolbarStuff() {
+        Log.d(TAG, "setToolbarStuff: Creating toolbar options");
+        navigationView.bringToFront();
+        materialToolbar.setTitle("Search places nearby!");
+        setSupportActionBar(materialToolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, materialToolbar
+                , R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        navigationView.setNavigationItemSelectedListener(this);
+
+        navigationView.setCheckedItem(R.id.nav_map);
+
+//        Menu menu = navigationView.getMenu();
+//        menu.findItem(R.id.nav_profile).setVisible(false);
     }
 
     //I dont need to ask for location because of the start permission check
@@ -342,7 +373,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         if (place != null) {
                             mySearchType = "default";
                             centerMarker.setVisibility(View.INVISIBLE);
-                            btnFind.setVisibility(View.INVISIBLE);
                             addMarkerToMap(place);
                             moveCamera(place.getLatLng(), DEFAULT_ZOOM);
                         }
@@ -366,20 +396,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
             }
         });
-        /** Find button will find whatever user wants to find from menu*/
-        btnFind.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                searchForGivenPlacesAroundMe(view);
-            }
-        });
-
     }
 
     /**
      * A method to search what the user wanted to find
      */
-    private void searchForGivenPlacesAroundMe(View view) {
+    private void searchForGivenPlacesAroundMe() {
         Log.d(TAG, "searchForGivenPlacesAroundMe: Ripple animation");
         centerMarker.setVisibility(View.VISIBLE);
         LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
@@ -724,7 +746,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                                         , mLastKnownLocation.getLongitude()), DEFAULT_ZOOM);
                                 // Remove the updates so we wont keep getting location updates.
                                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-                                btnFind.setClickable(true);
                             }
                         };
                         fusedLocationProviderClient.requestLocationUpdates(locationRequest
@@ -752,8 +773,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-            layoutParams.addRule(RelativeLayout.ABOVE, btnFind.getId());
-            layoutParams.setMargins(0, 0, 0, 270);
+            layoutParams.setMargins(0, 0, 0, 180);
 
             View toolbar = ((View) mapView.findViewById(Integer.parseInt("1")).
                     getParent()).findViewById(Integer.parseInt("4"));
@@ -765,7 +785,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             rlp.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
             rlp.addRule(RelativeLayout.LEFT_OF, 0);
             rlp.addRule(RelativeLayout.LEFT_OF, locationButton.getId());
-            rlp.setMargins(100, 0, 100, 270);
+            rlp.setMargins(100, 0, 100, 180);
         }
     }
 
@@ -790,6 +810,45 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        Log.d(TAG, "onNavigationItemSelected: Item selected: " + item.getTitle());
+        switch (item.getItemId()) {
+            case R.id.nav_calendar:
+                makeToast("Opening calendar");
+                break;
+            case R.id.nav_translate:
+                makeToast("Opening translate");
+                break;
+            case R.id.nav_logout:
+                makeToast("Logging out");
+                break;
+            case R.id.nav_share:
+                makeToast("Opening share");
+                break;
+            case R.id.nav_rate:
+                makeToast("Moving to rate");
+                break;
+            case R.id.nav_home:
+                finish();
+                break;
+        }
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    /**
+     * A method to display a toast
+     */
+    private void makeToast(String message) {
+        Log.d(TAG, "makeToast:" + message);
+        if (toast != null)
+            toast.cancel();
+
+        toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
 }
