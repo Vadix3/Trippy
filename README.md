@@ -12,13 +12,13 @@ Including:
 - Calendar with todo list
 
 Main Page:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Main.jpeg?raw=true| width=48)
+![alt text](https://github.com/Vadix3/Trippy/blob/master/Main.jpeg =24x48)
 
 Menu:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Menu.jpeg?raw=true&s=200)
+![alt text](https://github.com/Vadix3/Trippy/blob/master/Menu.jpeg =24x48)
 
 Search for places nearby:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Search.jpeg?raw=true&s=200)
+![alt text](https://github.com/Vadix3/Trippy/blob/master/Search.jpeg =24x48)
 
 Display place details:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Place.jpeg?raw=true&s=200)
+![alt text](https://github.com/Vadix3/Trippy/blob/master/Place.jpeg =24x48)
