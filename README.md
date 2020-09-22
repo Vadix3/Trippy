@@ -11,8 +11,9 @@ Including:
 - Translation service
 - Calendar with todo list
 
+
 Main Page:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Main.jpeg =24x48)
+<img src="https://github.com/Vadix3/Trippy/blob/master/Main.jpeg" width="300" />
 
 Menu:
 ![alt text](https://github.com/Vadix3/Trippy/blob/master/Menu.jpeg =24x48)
