@@ -13,13 +13,20 @@ Including:
 
 
 Main Page:
-<img src="https://github.com/Vadix3/Trippy/blob/master/Main.jpeg" width="300" />
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/Main.jpeg" width="200" />
 
 Menu:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Menu.jpeg =24x48)
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/Menu.jpeg" width="200" />
+
 
 Search for places nearby:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Search.jpeg =24x48)
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/Search.jpeg" width="300" />
+
 
 Display place details:
-![alt text](https://github.com/Vadix3/Trippy/blob/master/Place.jpeg =24x48)
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/Place.jpeg" width="300" />
+
