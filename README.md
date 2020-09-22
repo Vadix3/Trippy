@@ -23,10 +23,10 @@ Menu:
 
 Search for places nearby:
 
-<img src="https://github.com/Vadix3/Trippy/blob/master/Search.jpeg" width="300" />
+<img src="https://github.com/Vadix3/Trippy/blob/master/Search.jpeg" width="200" />
 
 
 Display place details:
 
-<img src="https://github.com/Vadix3/Trippy/blob/master/Place.jpeg" width="300" />
+<img src="https://github.com/Vadix3/Trippy/blob/master/Place.jpeg" width="200" />
 
