@@ -40,6 +40,7 @@
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/map_LAY_MaterialToolBar"
                     style="@style/Widget.MaterialComponents.Toolbar.Primary"
+                    android:background="@color/colorPrimary"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
                     app:menu="@menu/top_app_bar"

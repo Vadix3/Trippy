@@ -816,12 +816,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         Log.d(TAG, "onNavigationItemSelected: Item selected: " + item.getTitle());
         switch (item.getItemId()) {
-            case R.id.nav_calendar:
-                makeToast("Opening calendar");
-                break;
-            case R.id.nav_translate:
-                makeToast("Opening translate");
-                break;
             case R.id.nav_logout:
                 makeToast("Logging out");
                 break;

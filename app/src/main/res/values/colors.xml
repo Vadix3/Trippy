@@ -8,6 +8,7 @@
     <color name="coolGreen">#00E676</color>
     <color name="coolRed">#D50000</color>
     <color name="dateColor">#18FFFF</color>
+    <color name="eventColor">#FF5722</color>
     <color name="strokeColor">
         <selector xmlns:android="http://schemas.android.com/apk/res/android">
             <item android:color="?attr/colorPrimary" android:state_checked="true" />

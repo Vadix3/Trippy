@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-    api 'com.google.android.material:material:1.2.0-alpha02'
+    api 'com.google.android.material:material:1.3.0-alpha02'
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'com.karumi:dexter:6.2.1'
@@ -60,11 +60,7 @@ dependencies {
     implementation 'com.mikhaellopez:circularimageview:4.2.0'
     implementation 'com.jakewharton.threetenabp:threetenabp:1.2.4'
     implementation 'com.loopj.android:android-async-http:1.4.9'
-
-    //The most recent version of firestore causes duplicates!//
-    // The version below works
-    implementation 'com.google.firebase:firebase-firestore:21.4.3'
-//    implementation 'com.google.firebase:firebase-firestore:21.6.0'
+    implementation 'com.google.firebase:firebase-firestore:21.6.0'
     implementation 'com.google.firebase:firebase-analytics:17.5.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

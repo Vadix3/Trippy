@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -28,18 +29,16 @@ import android.widget.Toast;
 
 import com.blongho.country_data.World;
 import com.bumptech.glide.Glide;
-import com.example.trippy.Dialogs.CalendarDialog;
 import com.example.trippy.Dialogs.NewCountryDialog;
 import com.example.trippy.Dialogs.NewTripDialog;
-import com.example.trippy.Dialogs.TranslationDialog;
 import com.example.trippy.Fragments.CalendarFragment;
 import com.example.trippy.Fragments.CurrencyFragment;
-import com.example.trippy.Fragments.EventsListFragment;
 import com.example.trippy.Fragments.TranslatorFragment;
 import com.example.trippy.Fragments.WeatherFragment;
 import com.example.trippy.Interfaces.OnCalendarDialogDismissedListener;
 import com.example.trippy.Interfaces.OnNewTripCallbackListener;
 import com.example.trippy.Interfaces.OnSelectedCountryListener;
+import com.example.trippy.Objects.MyContainer;
 import com.example.trippy.Objects.MyEvent;
 import com.example.trippy.Objects.MyTrip;
 import com.example.trippy.Objects.MyUser;
@@ -113,17 +112,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Views
      */
     //Layouts
+    private DrawerLayout mainDrawerLayout;
     private RelativeLayout mainLayout;
     private RelativeLayout titleLayout;
     private LinearLayout currencyWeatherLayout;
     private DrawerLayout drawerLayout;
 
+    //Cards
+    private MaterialCardView currencyCard;
+    private RelativeLayout translatorCard;
     private WeatherFragment weatherFragment;
     private CurrencyFragment currencyFragment;
 
 
     //TextViews
     private TextView welcomeLabel;
+    private TextView myConvertAmountLabel;
+    private EditText editConvertAmount;
 
 
     //ImageViews
@@ -140,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LatLng myLocationLatLng;
     private MyTrip myCurrentTrip;
     private MyUser myUser;
+    private MyContainer myContainer;
 
     /**
      * Variables
@@ -230,11 +236,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 if (documentSnapshot.exists()) {
                     Log.d(TAG, "onSuccess: user exists!");
-                    myUser = documentSnapshot.toObject(MyUser.class);
+                    myContainer = documentSnapshot.toObject(MyContainer.class);
+                    myCurrentTrip = myContainer.getMyTrip();
+                    myUser = myContainer.getMyUser();
                     Log.d(TAG, "onSuccess: Got user: " + myUser.toString());
                     isLocationEnabled();
                     initViews();
                     World.init(getApplicationContext());
+                    if(myCurrentTrip!=null){
+                        Log.d(TAG, "onSuccess: myCurrentTrip: "+myCurrentTrip.toString());
+                        tripDetailsLoaded=true;
+                    }
                 } else {
                     Log.d(TAG, "onSuccess: Document does not exist! Prompt enter country");
                     getUserCountry(displayName, userEmail);
@@ -247,6 +259,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d(TAG, "onFailure: Exception: " + e.getMessage());
             }
         });
+    }
+
+    private void convertDatesToStrings() {
+        Log.d(TAG, "convertDatesToStrings: converting strings");
+
     }
 
     /**
@@ -283,6 +300,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void initViews() {
         Log.d(TAG, "initViews: Initing views");
+        mainDrawerLayout = findViewById(R.id.main_LAY_mainDrawerlayout);
+        mainDrawerLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (b) {
+                    Log.d(TAG, "onFocusChange: Main layout focused");
+                }
+            }
+        });
+
         currencyWeatherLayout = findViewById(R.id.main_LAY_currencyWeatherLayout);
         currencyWeatherLayout.setVisibility(View.GONE);
         drawerLayout = findViewById(R.id.main_LAY_mainDrawerlayout);
@@ -291,6 +318,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
         materialToolbar = findViewById(R.id.main_LAY_MaterialToolBar);
 
+        //Currency converter fragment
+        myConvertAmountLabel = findViewById(R.id.currencyFragment_LBL_MyAmount);
+        editConvertAmount = findViewById(R.id.currencyFragment_EDT_editAmount);
         setToolbarStuff();
     }
 
@@ -308,11 +338,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.nav_home);
-
-        initCalendarFragment();
-        initTranslatorFragment();
-//        Menu menu = navigationView.getMenu();
-//        menu.findItem(R.id.nav_profile).setVisible(false);
     }
 
     /**
@@ -327,57 +352,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    /**
-     * A method to initialize the events list fragment
-     */
-    private void initEventsFragment() {
-        Log.d(TAG, "initEventsFragment: Creating events fragment");
-        //Fragment
-        EventsListFragment eventsListFragment = new EventsListFragment(myCurrentTrip.getEvents());
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.main_LAY_eventsList, eventsListFragment);
-        transaction.commit();
-    }
-
     @Override
     public void onClick(View view) {
-    }
-
-    /**
-     * A method to open the translator activity
-     */
-    private void openTranslator() {
-        createDialog(new TranslationDialog(MainActivity.this, myCurrentTrip.getCountryCode()), OPEN_TRANSLATOR);
-    }
-
-    /**
-     * A method to open the caledar
-     */
-    private void openCalendar() {
-        Log.d(TAG, "openCalendar: Open calendar pressed");
-        if (myCurrentTrip.getTripDates() != null && myCurrentTrip.getEvents() != null) { // I have both arrays
-            Log.d(TAG, "openCalendar: Sending events and dates");
-            createDialog(new CalendarDialog(MainActivity.this, myCurrentTrip.getTripDates()
-                    , myCurrentTrip.getEvents()), OPEN_CALENDAR);
-            return;
-        }
-        if (myCurrentTrip.getTripDates() == null && myCurrentTrip.getEvents() == null) { // If I have nothing
-            Log.d(TAG, "openCalendar: Sending nothing");
-            createDialog(new CalendarDialog(MainActivity.this), OPEN_CALENDAR);
-            return;
-        }
-        if (myCurrentTrip.getTripDates() == null) { // if I have only events array
-            Log.d(TAG, "openCalendar: Sending only events array");
-            createDialog(new CalendarDialog(MainActivity.this, null
-                    , myCurrentTrip.getEvents()), OPEN_CALENDAR);
-            return;
-        }
-        if (myCurrentTrip.getEvents() == null) { // I have only trip dates array
-            Log.d(TAG, "openCalendar: Sending only tripDates array");
-            createDialog(new CalendarDialog(MainActivity.this, myCurrentTrip.getTripDates()
-                    , null), OPEN_CALENDAR);
-            return;
-        }
     }
 
     /**
@@ -532,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Khabarovsk
 //        myLocationLatLng = new LatLng(48.4814, 135.0721);
         //Prague
-//        myLocationLatLng = new LatLng(50.0755, 14.4378);
+        myLocationLatLng = new LatLng(50.0755, 14.4378);
         //Berlin
 //        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
@@ -544,7 +520,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Barcelona
 //        myLocationLatLng = new LatLng(41.3851, 2.1734);
         //Real location
-        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+//        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
 
         initMyCurrentLocation();
@@ -768,7 +744,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        getMainLooper().prepare();
                         makeToast("Weather not available");
+                        //TODO: Crashes here: "Can't create handler inside thread Thread"
                         weatherFragment = new WeatherFragment("Weather Unavailable"
                                 , "", null);
                         FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
@@ -804,7 +782,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             transaction1.replace(R.id.main_LAY_weather, weatherFragment);
                             transaction1.commit();
                             makeSnackbar("Location data loaded!", R.color.coolGreen);
-                            currencyWeatherLayout.setVisibility(View.VISIBLE);
                             checkForTripDetails();
                         }
                     });
@@ -837,7 +814,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             saveUserToFirestore();
         } else {
             //Trip details are not available, ask user to enter them
-            createDialog(new NewTripDialog(MainActivity.this), NEW_TRIP_DIALOG);
+            createDialog(new NewTripDialog(MainActivity.this, getSupportFragmentManager()), NEW_TRIP_DIALOG);
         }
     }
 
@@ -846,7 +823,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * TODO:Complete it once relevant, load type?
      */
     private void loadTripDetails() {
-        Log.d(TAG, "loadTripDetails: Loading trip details from");
+        Log.d(TAG, "loadTripDetails: Loading trip details from firestore");
     }
 
     /**
@@ -909,10 +886,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 height = (int) (getResources().getDisplayMetrics().heightPixels * 0.3);
                 width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
                 break;
-            case OPEN_CALENDAR:
-                height = (int) (getResources().getDisplayMetrics().heightPixels * 0.45);
-                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
-                break;
             case OPEN_NAVIGATION:
                 height = (int) (getResources().getDisplayMetrics().heightPixels * 0.55);
                 width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
@@ -935,47 +908,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /**Cards*/
 
         MaterialCardView weatherCard = findViewById(R.id.weatherfragment_LAY_cardview);
-        MaterialCardView currencyCard = findViewById(R.id.currencyFragment_LAY_cardview);
-        MaterialCardView calendarCard = findViewById(R.id.calendarFragment_LAY_cardview);
+        currencyCard = findViewById(R.id.currencyFragment_LAY_cardview);
 
-        currencyCard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openCurrencyEditDialog();
-            }
-        });
         weatherCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                openWeatherDerailsDialog();
+                openWeatherDetailsDialog();
             }
         });
-        calendarCard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openCalendarDialog();
-            }
-        });
-    }
-
-    /**
-     * A method to open calendar events dialog
-     */
-    private void openCalendarDialog() {
-        Log.d(TAG, "openCalendarDialog: Opening calendar dialog");
-    }
-
-    /**
-     * A method to open currency edit dialog
-     */
-    private void openCurrencyEditDialog() {
-        Log.d(TAG, "openCurrencyEditDialog: Opening currency edit dialog");
     }
 
     /**
      * A method to open weather forecast dialog
      */
-    private void openWeatherDerailsDialog() {
+    private void openWeatherDetailsDialog() {
         Log.d(TAG, "openCurrencyEditDialog: Opening weather forecast dialog");
     }
 
@@ -992,13 +938,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             Log.d(TAG, "getEventsArray: Got callback with: " + tripEvents.toString());
             myCurrentTrip.setEvents(tripEvents);
-
-            //TODO: Display only closest event, do events button
-            //TODO: Sort
-            //TODO: list
-            /**List fragment*/
-            initEventsFragment();
-
+            saveUserToFirestore();
         }
     }
 
@@ -1006,8 +946,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * A method to initialize the calendar fragment
      */
     private void initCalendarFragment() {
-        Log.d(TAG, "initCalendarFragment: Creating calendar fragment");
-        CalendarFragment calendarFragment = new CalendarFragment();
+        Log.d(TAG, "initCalendarFragment: Creating calendar fragment with trip: " + myCurrentTrip.toString());
+        CalendarFragment calendarFragment = new CalendarFragment(myCurrentTrip);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.main_LAY_calendar, calendarFragment);
         transaction.commit();
@@ -1022,31 +962,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initMainCards();
 
         if (tripDates == null && tripName == null) {
-            Log.d(TAG, "getResult: Null results");
-            saveUserToFirestore();
-            return;
-        }
-        if (tripDates == null) {
-            Log.d(TAG, "getResult: Null tripDates");
-            saveUserToFirestore();
-            return;
-        }
-        if (tripName == null) {
-            Log.d(TAG, "getResult: Null tripName");
+            Log.d(TAG, "getResult: Null results, user did not want to enter trip details");
+            initCalendarFragment();
+            initTranslatorFragment();
+            currencyWeatherLayout.setVisibility(View.VISIBLE);
             saveUserToFirestore();
             return;
         }
 
-        myCurrentTrip.setTripDates(tripDates);
+        ArrayList<Long> convertedTripDates = new ArrayList<>();
+
+        for (CalendarDay calendarDay : tripDates) {
+            convertedTripDates.add(calendarDay.getDate().toEpochDay());
+        }
+        myCurrentTrip.setTripDates(convertedTripDates);
         myCurrentTrip.setTripName(tripName);
-
-        Log.d(TAG, "getResult: getting callback from new trip dialog with results:\n" +
-                "tripDates: " + myCurrentTrip.getTripDates().toString()
-                + "\ntripName: " + myCurrentTrip.getTripName());
+        Log.d(TAG, "getResult: My trip details: " + myCurrentTrip.toString());
 
         welcomeLabel.setText("" + tripName);
         welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
         tripDetailsLoaded = true;
+        initCalendarFragment();
+        initTranslatorFragment();
+        currencyWeatherLayout.setVisibility(View.VISIBLE);
         saveUserToFirestore();
     }
 
@@ -1096,14 +1034,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void saveUserToFirestore() {
         Log.d(TAG, "saveNewUserToFirestore: Saving user: " + myUser.toString());
         String emailID = myUser.getEmailAddress();
+
+
+        myContainer = new MyContainer(myUser, myCurrentTrip);
+
+
         db.collection("users")
                 .document(emailID)
-                .set(myUser)
+                .set(myContainer)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
                         Log.d(TAG, "onSuccess: User saved successfully!");
-
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -1117,9 +1059,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
+            return;
         }
+        if (currencyCard.hasFocus()) {
+            Log.d(TAG, "onBackPressed: Currency card has focus");
+            currencyCard.clearFocus();
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -1128,12 +1075,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (item.getItemId()) {
             case R.id.nav_map:
                 openMap();
-                break;
-            case R.id.nav_calendar:
-                openCalendar();
-                break;
-            case R.id.nav_translate:
-                openTranslator();
                 break;
             case R.id.nav_logout:
                 makeToast("Logging out");
