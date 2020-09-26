@@ -14,7 +14,7 @@ Including:
 
 Main Page:
 
-<img src="https://github.com/Vadix3/Trippy/blob/master/Main.jpeg" width="200" />
+<img src="https://github.com/Vadix3/Trippy/blob/master/mainPage.jpeg" width="200" />
 
 Menu:
 
