@@ -77,6 +77,9 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:18.1.0'
     implementation 'com.github.Shashank02051997:FancyToast-Android:0.1.6'
     implementation 'com.google.firebase:firebase-auth:19.4.0'
+    implementation 'me.zhanghai.android.materialprogressbar:library:1.6.1'
+    implementation 'com.google.android.gms:play-services-ads:19.4.0'
+
 
 }
 repositories {

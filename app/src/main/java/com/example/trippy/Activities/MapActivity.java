@@ -15,6 +15,11 @@ import com.example.trippy.Fragments.SearchTypeFragment;
 import com.example.trippy.Interfaces.OnSearchTypeSelectedListener;
 import com.example.trippy.Objects.MyMarker;
 import com.example.trippy.R;
+import com.facebook.login.LoginManager;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -49,6 +54,7 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import com.skyfishjy.library.RippleBackground;
@@ -93,7 +99,7 @@ import java.util.List;
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "pttt";
-
+    private FirebaseAuth mAuth;
 
     /**
      * Map stuff
@@ -817,7 +823,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "onNavigationItemSelected: Item selected: " + item.getTitle());
         switch (item.getItemId()) {
             case R.id.nav_logout:
-                makeToast("Logging out");
+                logoutFromApp();
                 break;
             case R.id.nav_share:
                 makeToast("Opening share");
@@ -843,6 +849,42 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
         toast.show();
+    }
+
+    /**
+     * A method to log user out
+     */
+    private void logoutFromApp() {
+        Log.d(TAG, "logoutFromApp: Logging out");
+
+        //Logout firebase
+        if (mAuth != null) {
+            Log.d(TAG, "onStart: FIREBASE: User logged in");
+            mAuth.signOut();
+        }
+
+        //Logout facebook
+        LoginManager fb = LoginManager.getInstance();
+        if (fb != null) {
+            Log.d(TAG, "logoutFromApp: FACEBOOK: User logged in");
+            fb.logOut();
+        }
+
+        //Logout google
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
+            Log.d(TAG, "logoutFromApp: GOOGLE: User logged in");
+            GoogleSignInOptions gso = new GoogleSignInOptions.
+                    Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).
+                    build();
+
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+            googleSignInClient.signOut();
+        }
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.putExtra("LOGGED_OUT", 1);
+        startActivity(intent);
+        finish();
     }
 
 }

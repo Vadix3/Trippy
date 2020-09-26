@@ -12,6 +12,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -43,8 +44,19 @@ import com.example.trippy.Objects.MyEvent;
 import com.example.trippy.Objects.MyTrip;
 import com.example.trippy.Objects.MyUser;
 import com.example.trippy.R;
+import com.facebook.login.LoginManager;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -90,6 +102,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
+
 //TODO:Deal with no internet problems. dont make user wait for response from server.
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
         , OnNewTripCallbackListener, OnCalendarDialogDismissedListener, OnSelectedCountryListener
@@ -98,9 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String TAG = "pttt";
     private static final String NEW_TRIP_DIALOG = "newTripDialog";
     private static final String OPEN_NAVIGATION = "navigationDialog";
-    private static final String OPEN_CALENDAR = "addCalendarEvent";
     private static final String OPEN_TRANSLATOR = "openTranslator";
-    private static final String DEFAULT_CURRENCY = "EUR";
 
     public static final int EMAIL_LOGIN = 0;
     public static final int GOOGLE_LOGIN = 1;
@@ -114,24 +126,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //Layouts
     private DrawerLayout mainDrawerLayout;
     private RelativeLayout mainLayout;
-    private RelativeLayout titleLayout;
     private LinearLayout currencyWeatherLayout;
     private DrawerLayout drawerLayout;
 
     //Cards
     private MaterialCardView currencyCard;
-    private RelativeLayout translatorCard;
     private WeatherFragment weatherFragment;
     private CurrencyFragment currencyFragment;
 
 
     //TextViews
     private TextView welcomeLabel;
-    private TextView myConvertAmountLabel;
-    private EditText editConvertAmount;
-
 
     //ImageViews
+    private ImageView countryPhoto;
+
 
     //Other
     private MaterialToolbar materialToolbar;
@@ -150,18 +159,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Variables
      */
-    // If there are details saved on server / firebase
-    private boolean tripDetailsAvailableToLoad = false;
-
-    // If user loaded / created trip details
-    private boolean tripDetailsLoaded = false;
 
 
     /**
      * Login stuff
      */
     private FirebaseAuth mAuth;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    private MaterialProgressBar loadingBar;
+
+    private Snackbar snackbar;
 
     @Override
     protected void onResume() {
@@ -176,7 +184,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainLayout = findViewById(R.id.main_LAY_mainlayout);
-        makeSnackbar("Loading location data", R.color.coolBlue);
+        makeSnackbar("Loading data", R.color.colorPrimary);
+        initAdStuff();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         getUserDataFromLogin(getIntent().getIntExtra("loginCode", 0));
     }
@@ -243,9 +252,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     isLocationEnabled();
                     initViews();
                     World.init(getApplicationContext());
-                    if(myCurrentTrip!=null){
-                        Log.d(TAG, "onSuccess: myCurrentTrip: "+myCurrentTrip.toString());
-                        tripDetailsLoaded=true;
+                    if (myCurrentTrip != null) {
+                        Log.d(TAG, "onSuccess: myCurrentTrip: " + myCurrentTrip.toString());
                     }
                 } else {
                     Log.d(TAG, "onSuccess: Document does not exist! Prompt enter country");
@@ -261,17 +269,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void convertDatesToStrings() {
-        Log.d(TAG, "convertDatesToStrings: converting strings");
-
-    }
-
     /**
      * A user chose to log in using facebook / google, and the user does not exist in firestore.
      * I can get the users name, lastname and email, But I need the users country to complete the
      * user object. This method will ask the user to select country of origin to complete object.
      * The method will get the country & currency codes accordingly.
-     * TODO: Get country and currency codes ********************************
+     * =
      */
     private void getUserCountry(String displayName, String userEmail) {
         Log.d(TAG, "getUserCountry: Asking user to enter country");
@@ -310,18 +313,76 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        // Progress bar
+        loadingBar = findViewById(R.id.main_BAR_progressBar);
+        loadingBar.setIndeterminate(true);
+
         currencyWeatherLayout = findViewById(R.id.main_LAY_currencyWeatherLayout);
         currencyWeatherLayout.setVisibility(View.GONE);
         drawerLayout = findViewById(R.id.main_LAY_mainDrawerlayout);
         navigationView = findViewById(R.id.main_NAV_navigationView);
-        titleLayout = findViewById(R.id.main_LAY_titleLayout);
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
         materialToolbar = findViewById(R.id.main_LAY_MaterialToolBar);
-
-        //Currency converter fragment
-        myConvertAmountLabel = findViewById(R.id.currencyFragment_LBL_MyAmount);
-        editConvertAmount = findViewById(R.id.currencyFragment_EDT_editAmount);
+        countryPhoto = findViewById(R.id.main_IMG_countryPhoto);
         setToolbarStuff();
+    }
+
+    /**
+     * A method to initialize the ad stuff
+     */
+    private void initAdStuff() {
+        Log.d(TAG, "initAdStuff: Initing add stuff");
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+                Log.d(TAG, "onInitializationComplete: Ad init complete");
+            }
+        });
+
+        AdView adView = new AdView(this);
+        adView = findViewById(R.id.main_AD_adview);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
+
+        adView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                Log.d(TAG, "onAdLoaded: ad loaded");
+                // Code to be executed when an ad finishes loading.
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError adError) {
+                Log.d(TAG, "onAdFailedToLoad: ad failed to load: " + adError.toString());
+                // Code to be executed when an ad request fails.
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d(TAG, "onAdOpened: ad opened");
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+
+            @Override
+            public void onAdClicked() {
+                Log.d(TAG, "onAdClicked: ad clicked");
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                Log.d(TAG, "onAdLeftApplication: ad left app");
+                // Code to be executed when the user has left the app.
+            }
+
+            @Override
+            public void onAdClosed() {
+                Log.d(TAG, "onAdClosed: ad closed");
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+            }
+        });
     }
 
     /**
@@ -345,16 +406,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void initTranslatorFragment() {
         Log.d(TAG, "initTranslatorFragment: Creating translator fragment");
-        TranslatorFragment translatorFragment = new TranslatorFragment(myUser.getCountryCode());
+        TranslatorFragment translatorFragment = new TranslatorFragment(myCurrentTrip.getCountryCode());
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.main_LAY_translate, translatorFragment);
         transaction.commit();
-
+        loadingBar.setIndeterminate(false);
+        loadingBar.setVisibility(View.GONE);
     }
 
-    @Override
-    public void onClick(View view) {
-    }
 
     /**
      * A method to open the map activity
@@ -500,36 +559,81 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @SuppressLint("MissingPermission")
     private void updateUItoMatchLocation() {
-        /** TODO: Fake latLng to check if it works. fake here
-         * myLocationLatLng = new LatLng(fakeLatitude,fakeLongitude);
-         * this should give the device a fake location
-         * below a fake rio de janeiro location
-         */
         //Khabarovsk
 //        myLocationLatLng = new LatLng(48.4814, 135.0721);
         //Prague
-        myLocationLatLng = new LatLng(50.0755, 14.4378);
+//        myLocationLatLng = new LatLng(50.0755, 14.4378);
         //Berlin
 //        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
-//        myLocationLatLng = new LatLng(-22.908333, -43.196388);
+        myLocationLatLng = new LatLng(-22.908333, -43.196388);
         //BangKok
 //        myLocationLatLng = new LatLng(13.7563, 100.5018);
         //Marseilles
-//        myLocationLatLng = new LatLng(43.2965,5.3698);
+//        myLocationLatLng = new LatLng(43.2965, 5.3698);
         //Barcelona
 //        myLocationLatLng = new LatLng(41.3851, 2.1734);
         //Real location
 //        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
+        makeSnackbar("Getting country", R.color.colorPrimary);
 
         initMyCurrentLocation();
         setFlagImage(myCurrentTrip.getCountryCode());
+        setCityImage(myCurrentTrip.getCity());
         welcomeLabel.setText("" + myCurrentTrip.getCity() + ", " + myCurrentTrip.getCountry());
 
         /** After we are done with location, find currency*/
         Log.d(TAG, "updateUItoMatchLocation: USD currency, convert my currency to usd");
         getCurrency();
+    }
+
+    /**
+     * A method to set image of the city
+     */
+    private void setCityImage(String city) {
+        Log.d(TAG, "setCityImage: Setting city image for: " + city);
+        String url = "https://pixabay.com/api/?key=" + getString(R.string.pixabay_api_key)
+                + "&q=" + city + "&image_type=photo";
+        Log.d(TAG, "setCityImage: Requesting: " + url);
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .header("Content-Type", "application/json")
+                .build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                Log.d(TAG, "onFailure: Exception: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                String initialResponse = response.body().string();
+                Log.d(TAG, "onResponse: Got response: " + initialResponse);
+                try {
+                    JSONObject all = new JSONObject(initialResponse);
+                    JSONArray array = (JSONArray) all.get("hits");
+                    if (array.length() == 0) {
+                        Log.d(TAG, "onResponse: Didn't find any images for the city, searching country images");
+                        setCityImage(myCurrentTrip.getCountry());
+                    } else {
+                        JSONObject urlContainer = (JSONObject) array.get(0);
+                        String imageUrl = (String) urlContainer.get("largeImageURL");
+                        Log.d(TAG, "onResponse: Image url: " + imageUrl);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Glide.with(countryPhoto).load(imageUrl).into(countryPhoto);
+                            }
+                        });
+                    }
+                } catch (JSONException e) {
+                    Log.d(TAG, "onResponse: Json exception: " + e.getMessage());
+                }
+
+            }
+        });
     }
 
     /**
@@ -547,8 +651,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String countryCode = addresses.get(0).getCountryCode();
             String currencyCode = countryCodeToCurrencyCode(countryCode);
             float currencyRate = 0;
-            myCurrentTrip = new MyTrip(city, country, countryCode, currencyCode, currencyRate
-                    , null, null, null);
+            if (myCurrentTrip == null) {
+                myCurrentTrip = new MyTrip(city, country, countryCode, currencyCode, currencyRate
+                        , null, null, null);
+            }
         } catch (IOException e) {
             Log.d(TAG, "updateUItoMatchLocation: Problem: " + e.getMessage());
         }
@@ -619,7 +725,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private String getValueFromJsonString(String jsonString, String key, String param) {
         Log.d(TAG, "getValueFromJsonString: Getting " + key + " with param " + param + " from " + jsonString);
-        //TODO: Albania money does not work
         String val = "";
         try {
             JSONObject obj = new JSONObject(jsonString);
@@ -640,6 +745,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void getCurrency() {
         Log.d(TAG, "getCurrency: Opening http request to get currency");
+        makeSnackbar("Getting currency", R.color.colorPrimary);
 
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
@@ -724,12 +830,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void getLocationWeather() {
         Log.d(TAG, "getLocationWeather: Getting city weather");
+        makeSnackbar("Getting weather", R.color.colorPrimary);
+        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + myCurrentTrip.getCity()
+                + "&units=metric&appid=" + getString(R.string.open_weather_api_key);
 
-        String url = "https://api.weatherbit.io/v2.0/current?city=" + myCurrentTrip.getCity()
-                + "&key=" + getString(R.string.weather_icons_api_key);
-//        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + myCurrentTrip.getCity()
-//                + "&units=metric&appid=" + getString(R.string.open_weather_api_key);
-
+        Log.d(TAG, "getLocationWeather: Requesting: " + url);
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(url)
@@ -747,8 +852,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         getMainLooper().prepare();
                         makeToast("Weather not available");
                         //TODO: Crashes here: "Can't create handler inside thread Thread"
-                        weatherFragment = new WeatherFragment("Weather Unavailable"
-                                , "", null);
+                        weatherFragment = new WeatherFragment(null
+                                , null, null, null);
                         FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
                         transaction1.replace(R.id.main_LAY_weather, weatherFragment);
                         transaction1.commit();
@@ -762,26 +867,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String weatherString = response.body().string();
                 Log.d(TAG, "onResponse: " + weatherString);
 
-                /**Test**/
                 try {
                     JSONObject obj = new JSONObject(weatherString);
-                    JSONArray myArray = obj.getJSONArray("data");
-                    JSONObject iconContainer = (JSONObject) ((JSONObject) myArray.get(0)).get("weather");
-                    String realTemp = "" + ((JSONObject) myArray.get(0)).get("temp");
-                    String iconName = "" + iconContainer.get("icon");
-                    String weatherDescription = "" + iconContainer.get("description");
-                    Log.d(TAG, "onResponse: iconID: " + iconName + " realTemp: " + realTemp
-                            + " description: " + weatherDescription);
+                    JSONArray firstContainer = obj.getJSONArray("weather");
+                    JSONObject first = (JSONObject) firstContainer.get(0);
+                    JSONObject second = (JSONObject) obj.get("main");
 
+                    String iconID = (String) first.get("icon");
+                    String weatherDescription = (String) first.get("description");
+                    String realTemp;
+                    if (second.get("temp") instanceof Integer) {
+                        realTemp = "" + Math.round((int) second.get("temp"));
+                    } else {
+                        realTemp = "" + Math.round((double) second.get("temp"));
+                    }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             weatherFragment = new WeatherFragment(realTemp + "°C"
-                                    , weatherDescription, iconName);
+                                    , weatherDescription, iconID, myLocationLatLng);
                             FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
                             transaction1.replace(R.id.main_LAY_weather, weatherFragment);
                             transaction1.commit();
-                            makeSnackbar("Location data loaded!", R.color.coolGreen);
+                            loadingBar.setIndeterminate(false);
+                            loadingBar.setVisibility(View.GONE);
                             checkForTripDetails();
                         }
                     });
@@ -791,11 +900,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            makeSnackbar("Weather info unavailable", R.color.bpRed);
+                            weatherFragment = new WeatherFragment(null
+                                    , null, null, null);
+                            FragmentTransaction transaction1 = getSupportFragmentManager().beginTransaction();
+                            transaction1.replace(R.id.main_LAY_weather, weatherFragment);
+                            transaction1.commit();
+                            loadingBar.setIndeterminate(false);
+                            loadingBar.setVisibility(View.GONE);
                             checkForTripDetails();
                         }
                     });
-
                 }
             }
         });
@@ -808,22 +922,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void checkForTripDetails() {
         Log.d(TAG, "checkForTripDetails: Checking if trip details are available");
-        if (tripDetailsAvailableToLoad) {
-            loadTripDetails();
-            initMainCards();
-            saveUserToFirestore();
+
+        if (myCurrentTrip.getTripName() != null) {
+            Log.d(TAG, "checkForTripDetails: Trip details available!");
+            //There are trip details, init cards and save user to firestore
+            welcomeLabel.setText("" + myCurrentTrip.getTripName());
+            welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
+            initCalendarFragment();
+            initTranslatorFragment();
+            currencyWeatherLayout.setVisibility(View.VISIBLE);
+            if (snackbar != null) {
+                snackbar.dismiss();
+            }
         } else {
             //Trip details are not available, ask user to enter them
+            Log.d(TAG, "checkForTripDetails: Trip details are unavailable!");
             createDialog(new NewTripDialog(MainActivity.this, getSupportFragmentManager()), NEW_TRIP_DIALOG);
         }
-    }
-
-    /**
-     * A method to load trip details from SP or server
-     * TODO:Complete it once relevant, load type?
-     */
-    private void loadTripDetails() {
-        Log.d(TAG, "loadTripDetails: Loading trip details from firestore");
     }
 
     /**
@@ -863,10 +978,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void makeSnackbar(String message, int color) {
         Log.d(TAG, "makeSnackbar: " + message);
-        Snackbar snackbar = Snackbar
-                .make(mainLayout, message, Snackbar.LENGTH_LONG);
+        if (snackbar != null) {
+            snackbar.dismiss();
+        }
+        snackbar = Snackbar
+                .make(mainLayout, message, Snackbar.LENGTH_INDEFINITE);
         snackbar.setBackgroundTint(getColor(color));
         snackbar.show();
+
+        View view = snackbar.getView();
+        TextView txtv = view.findViewById(com.google.android.material.R.id.snackbar_text);
+        txtv.setGravity(Gravity.CENTER_HORIZONTAL);
+        txtv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        txtv.setTextSize(15);
+        txtv.setTypeface(null, Typeface.BOLD);
     }
 
     /**
@@ -898,31 +1023,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         dialog.getWindow().setLayout(width, height);
         dialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
-    }
-
-    /**
-     * A method to init main view cards
-     */
-    private void initMainCards() {
-        Log.d(TAG, "initMainCards: Initializing cards");
-        /**Cards*/
-
-        MaterialCardView weatherCard = findViewById(R.id.weatherfragment_LAY_cardview);
-        currencyCard = findViewById(R.id.currencyFragment_LAY_cardview);
-
-        weatherCard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openWeatherDetailsDialog();
-            }
-        });
-    }
-
-    /**
-     * A method to open weather forecast dialog
-     */
-    private void openWeatherDetailsDialog() {
-        Log.d(TAG, "openCurrencyEditDialog: Opening weather forecast dialog");
     }
 
 
@@ -959,14 +1059,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void getResult(List<CalendarDay> tripDates, String tripName) {
 
-        initMainCards();
-
         if (tripDates == null && tripName == null) {
             Log.d(TAG, "getResult: Null results, user did not want to enter trip details");
             initCalendarFragment();
             initTranslatorFragment();
             currencyWeatherLayout.setVisibility(View.VISIBLE);
             saveUserToFirestore();
+            loadingBar.setIndeterminate(false);
+            loadingBar.setVisibility(View.GONE);
+            if (snackbar != null) {
+                snackbar.dismiss();
+            }
             return;
         }
 
@@ -981,12 +1084,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         welcomeLabel.setText("" + tripName);
         welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
-        tripDetailsLoaded = true;
         initCalendarFragment();
         initTranslatorFragment();
         currencyWeatherLayout.setVisibility(View.VISIBLE);
+        loadingBar.setIndeterminate(false);
+        loadingBar.setVisibility(View.GONE);
+        if (snackbar != null) {
+            snackbar.dismiss();
+        }
         saveUserToFirestore();
     }
+
 
     /**
      * A method to get the selected country from user
@@ -1061,11 +1169,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             drawerLayout.closeDrawer(GravityCompat.START);
             return;
         }
-        if (currencyCard.hasFocus()) {
-            Log.d(TAG, "onBackPressed: Currency card has focus");
-            currencyCard.clearFocus();
-            return;
-        }
         super.onBackPressed();
     }
 
@@ -1077,7 +1180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 openMap();
                 break;
             case R.id.nav_logout:
-                makeToast("Logging out");
+                logoutFromApp();
                 break;
             case R.id.nav_share:
                 makeToast("Opening share");
@@ -1091,6 +1194,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    /**
+     * A method to log user out
+     */
+    private void logoutFromApp() {
+        Log.d(TAG, "logoutFromApp: Logging out");
+
+        //Logout firebase
+        if (mAuth != null) {
+            Log.d(TAG, "onStart: FIREBASE: User logged in");
+            mAuth.signOut();
+        }
+
+        //Logout facebook
+        LoginManager fb = LoginManager.getInstance();
+        if (fb != null) {
+            Log.d(TAG, "logoutFromApp: FACEBOOK: User logged in");
+            fb.logOut();
+        }
+
+        //Logout google
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
+            Log.d(TAG, "logoutFromApp: GOOGLE: User logged in");
+            GoogleSignInOptions gso = new GoogleSignInOptions.
+                    Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).
+                    build();
+
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+            googleSignInClient.signOut();
+        }
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.putExtra("LOGGED_OUT", 1);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onClick(View view) {
+
     }
 }
 

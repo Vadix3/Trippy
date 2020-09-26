@@ -9,7 +9,7 @@ Including:
 - Map
 - Places of interest around me (Restaraunts, Transportation, Supermarkets etc..)
 - Translation service
-- Calendar with todo list
+- Calendar with to-do list
 
 
 Main Page:

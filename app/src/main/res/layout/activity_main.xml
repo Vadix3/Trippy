@@ -5,10 +5,10 @@
     android:id="@+id/main_LAY_mainDrawerlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
     android:clickable="true"
     android:fitsSystemWindows="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical"
     tools:context=".Activities.MainActivity">
 
@@ -51,7 +51,9 @@
                     app:navigationIcon="@drawable/ic_menu_24dp"
                     app:title="Trippy App" />
 
+
             </com.google.android.material.appbar.AppBarLayout>
+
 
             <!-- Note: A RecyclerView can also be used -->
             <androidx.core.widget.NestedScrollView
@@ -66,13 +68,18 @@
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-
+        <ImageView
+            android:id="@+id/main_IMG_countryPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_below="@id/main_LAY_coordinatorLayout"
+            android:scaleType="fitXY" />
         <!-- TODO: Add timezone-->
         <RelativeLayout
             android:id="@+id/main_LAY_titleLayout"
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            android:layout_below="@id/main_LAY_coordinatorLayout"
+            android:layout_below="@id/main_IMG_countryPhoto"
             android:gravity="center">
 
             <LinearLayout
@@ -105,10 +112,20 @@
 
         </RelativeLayout>
 
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:id="@+id/main_BAR_progressBar"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/main_LAY_coordinatorLayout"
+            android:indeterminate="true"
+            app:mpb_progressStyle="horizontal" />
+
         <RelativeLayout
             android:id="@+id/main_LAY_infoLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_above="@id/main_AD_adview"
             android:layout_below="@id/main_LAY_titleLayout">
 
             <LinearLayout
@@ -152,16 +169,16 @@
                     android:layout_weight="1" />
             </LinearLayout>
 
-            <FrameLayout
-                android:id="@+id/main_LAY_eventsList"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:layout_below="@id/main_LAY_currencyWeatherLayout"
-                android:layout_alignParentBottom="true"
-                android:layout_marginTop="10dp" />
-
         </RelativeLayout>
 
+        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/main_AD_adview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            ads:adSize="BANNER"
+            ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
     </RelativeLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>
