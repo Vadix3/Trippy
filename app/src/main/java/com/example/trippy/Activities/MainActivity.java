@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
@@ -184,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainLayout = findViewById(R.id.main_LAY_mainlayout);
-        makeSnackbar("Loading data", R.color.colorPrimary);
+        makeSnackbar("Loading location data", R.color.colorPrimary);
         initAdStuff();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         getUserDataFromLogin(getIntent().getIntExtra("loginCode", 0));
@@ -332,55 +333,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void initAdStuff() {
         Log.d(TAG, "initAdStuff: Initing add stuff");
+
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
             public void onInitializationComplete(InitializationStatus initializationStatus) {
-                Log.d(TAG, "onInitializationComplete: Ad init complete");
+                Log.d(TAG, "onInitializationComplete: " + initializationStatus.toString());
             }
         });
-
-        AdView adView = new AdView(this);
-        adView = findViewById(R.id.main_AD_adview);
-        AdRequest adRequest = new AdRequest.Builder().build();
+        AdView adView = findViewById(R.id.main_AD_adview);
+        AdRequest adRequest = new AdRequest.Builder()
+                .build();
         adView.loadAd(adRequest);
 
         adView.setAdListener(new AdListener() {
             @Override
             public void onAdLoaded() {
-                Log.d(TAG, "onAdLoaded: ad loaded");
                 // Code to be executed when an ad finishes loading.
+                Log.d(TAG, "onAdLoaded: Ad loaded");
             }
 
             @Override
             public void onAdFailedToLoad(LoadAdError adError) {
-                Log.d(TAG, "onAdFailedToLoad: ad failed to load: " + adError.toString());
                 // Code to be executed when an ad request fails.
+                Log.d(TAG, "onAdFailedToLoad: Failed to load: " + adError.toString());
             }
 
             @Override
             public void onAdOpened() {
-                Log.d(TAG, "onAdOpened: ad opened");
                 // Code to be executed when an ad opens an overlay that
                 // covers the screen.
+                Log.d(TAG, "onAdOpened: Ad opened");
             }
 
             @Override
             public void onAdClicked() {
-                Log.d(TAG, "onAdClicked: ad clicked");
                 // Code to be executed when the user clicks on an ad.
+                Log.d(TAG, "onAdClicked: Ad clicked");
             }
 
             @Override
             public void onAdLeftApplication() {
-                Log.d(TAG, "onAdLeftApplication: ad left app");
                 // Code to be executed when the user has left the app.
+                Log.d(TAG, "onAdLeftApplication: Ad left  application");
             }
 
             @Override
             public void onAdClosed() {
-                Log.d(TAG, "onAdClosed: ad closed");
                 // Code to be executed when the user is about to return
                 // to the app after tapping on an ad.
+                Log.d(TAG, "onAdClosed: Ad closed");
             }
         });
     }
@@ -390,16 +391,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void setToolbarStuff() {
         Log.d(TAG, "setToolbarStuff: Creating toolbar options");
-        navigationView.bringToFront();
-        materialToolbar.setTitle("Hello " + myUser.getFirstMame() + "!");
-        setSupportActionBar(materialToolbar);
+        materialToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.options_language:
+                        makeToast("Language selected");
+                        return true;
+                    case R.id.nav_color_grassGreen:
+                        makeToast("GrassGreen Theme selected");
+                        return true;
+                    case R.id.nav_color_passionRed:
+                        makeToast("PassionRed Theme selected");
+                        return true;
+                    case R.id.nav_color_skyBlue:
+                        makeToast("SkyBlue Theme selected");
+                        return true;
+                    case R.id.options_about:
+                        makeToast("About selected");
+                        return true;
+                    case R.id.nav_language_hebrew:
+                        makeToast("Hebrew language selected");
+                        return true;
+                    case R.id.nav_language_russian:
+                        makeToast("Russian language selected");
+                        return true;
+                    case R.id.nav_language_english:
+                        makeToast("English language selected");
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        materialToolbar.setTitle("Hi " + myUser.getFirstMame() + "!");
+//        setSupportActionBar(materialToolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, materialToolbar
                 , R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.nav_home);
+        navigationView.bringToFront();
     }
+
+
 
     /**
      * A method to initialize the translator fragment
@@ -412,6 +448,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         transaction.commit();
         loadingBar.setIndeterminate(false);
         loadingBar.setVisibility(View.GONE);
+        welcomeLabel.setVisibility(View.VISIBLE);
     }
 
 
@@ -562,11 +599,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Khabarovsk
 //        myLocationLatLng = new LatLng(48.4814, 135.0721);
         //Prague
-//        myLocationLatLng = new LatLng(50.0755, 14.4378);
+        myLocationLatLng = new LatLng(50.0755, 14.4378);
         //Berlin
 //        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
-        myLocationLatLng = new LatLng(-22.908333, -43.196388);
+//        myLocationLatLng = new LatLng(-22.908333, -43.196388);
         //BangKok
 //        myLocationLatLng = new LatLng(13.7563, 100.5018);
         //Marseilles
@@ -579,9 +616,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         makeSnackbar("Getting country", R.color.colorPrimary);
 
         initMyCurrentLocation();
-        setFlagImage(myCurrentTrip.getCountryCode());
+//        setFlagImage(myCurrentTrip.getCountryCode());
         setCityImage(myCurrentTrip.getCity());
-        welcomeLabel.setText("" + myCurrentTrip.getCity() + ", " + myCurrentTrip.getCountry());
+        welcomeLabel.setText("" + myCurrentTrip.getCity());
 
         /** After we are done with location, find currency*/
         Log.d(TAG, "updateUItoMatchLocation: USD currency, convert my currency to usd");
@@ -660,20 +697,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /**
-     * A method to set the flag image according to the given country code
-     */
-    private void setFlagImage(String countryCode) {
-        Log.d(TAG, "setFlagImage: Setting flag image to: " + countryCode);
-        final int flag = World.getFlagOf(countryCode);
-
-
-        ImageView flagImageLeft = findViewById(R.id.main_IMG_flagImageLeft);
-        Glide.with(flagImageLeft).load(flag).into(flagImageLeft);
-        flagImageLeft.setImageResource(flag);
-        flagImageLeft.setVisibility(View.VISIBLE);
-
-    }
+//    /**
+//     * A method to set the flag image according to the given country code
+//     */
+//    private void setFlagImage(String countryCode) {
+//        Log.d(TAG, "setFlagImage: Setting flag image to: " + countryCode);
+//        final int flag = World.getFlagOf(countryCode);
+//
+//
+//        ImageView flagImageLeft = findViewById(R.id.main_IMG_flagImageLeft);
+//        Glide.with(flagImageLeft).load(flag).into(flagImageLeft);
+//        flagImageLeft.setImageResource(flag);
+//        flagImageLeft.setVisibility(View.VISIBLE);
+//
+//    }
 
     /**
      * A method to convert given country code to currency
@@ -891,6 +928,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             transaction1.commit();
                             loadingBar.setIndeterminate(false);
                             loadingBar.setVisibility(View.GONE);
+                            welcomeLabel.setVisibility(View.VISIBLE);
                             checkForTripDetails();
                         }
                     });
@@ -907,6 +945,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             transaction1.commit();
                             loadingBar.setIndeterminate(false);
                             loadingBar.setVisibility(View.GONE);
+                            welcomeLabel.setVisibility(View.VISIBLE);
                             checkForTripDetails();
                         }
                     });
@@ -927,7 +966,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d(TAG, "checkForTripDetails: Trip details available!");
             //There are trip details, init cards and save user to firestore
             welcomeLabel.setText("" + myCurrentTrip.getTripName());
-            welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
             initCalendarFragment();
             initTranslatorFragment();
             currencyWeatherLayout.setVisibility(View.VISIBLE);
@@ -1067,6 +1105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             saveUserToFirestore();
             loadingBar.setIndeterminate(false);
             loadingBar.setVisibility(View.GONE);
+            welcomeLabel.setVisibility(View.VISIBLE);
             if (snackbar != null) {
                 snackbar.dismiss();
             }
@@ -1083,12 +1122,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "getResult: My trip details: " + myCurrentTrip.toString());
 
         welcomeLabel.setText("" + tripName);
-        welcomeLabel.setGravity(Gravity.CENTER_HORIZONTAL);
         initCalendarFragment();
         initTranslatorFragment();
         currencyWeatherLayout.setVisibility(View.VISIBLE);
         loadingBar.setIndeterminate(false);
         loadingBar.setVisibility(View.GONE);
+        welcomeLabel.setVisibility(View.VISIBLE);
         if (snackbar != null) {
             snackbar.dismiss();
         }

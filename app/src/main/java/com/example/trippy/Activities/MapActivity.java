@@ -206,7 +206,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "setToolbarStuff: Creating toolbar options");
         navigationView.bringToFront();
         materialToolbar.setTitle("Search places nearby!");
-        setSupportActionBar(materialToolbar);
+//        setSupportActionBar(materialToolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, materialToolbar
                 , R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);

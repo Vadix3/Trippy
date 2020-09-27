@@ -47,7 +47,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
                     android:background="@color/colorPrimary"
-                    app:menu="@menu/top_app_bar"
+                    app:menu="@menu/options_menu"
                     app:navigationIcon="@drawable/ic_menu_24dp"
                     app:title="Trippy App" />
 
@@ -68,65 +68,56 @@
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-        <ImageView
-            android:id="@+id/main_IMG_countryPhoto"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_below="@id/main_LAY_coordinatorLayout"
-            android:scaleType="fitXY" />
-        <!-- TODO: Add timezone-->
         <RelativeLayout
-            android:id="@+id/main_LAY_titleLayout"
+            android:id="@+id/main_LAY_photoLayout"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_below="@id/main_IMG_countryPhoto"
-            android:gravity="center">
+            android:layout_height="300dp"
+            android:layout_below="@id/main_LAY_coordinatorLayout">
 
-            <LinearLayout
-                android:id="@+id/main_LAY_titleLinearLayout"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/main_IMG_countryPhoto"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal">
+                android:layout_alignParentTop="true"
+                android:scaleType="fitXY"
+                app:shapeAppearance="@style/ShapeAppearanceOverlay.App.CornerSize10Percent" />
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/main_IMG_flagImageLeft"
-                    android:layout_width="0dp"
-                    android:layout_height="100dp"
-                    android:layout_weight="1"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize70Percent" />
+            <TextView
+                android:id="@+id/main_LBL_welcomeTo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="20dp"
+                android:layout_marginBottom="15dp"
+                android:maxLines="1"
+                android:shadowColor="#000000"
+                android:shadowDx="1.5"
+                android:shadowDy="1.3"
+                android:shadowRadius="3"
+                android:textColor="@color/white"
+                android:textSize="40sp"
+                android:visibility="invisible"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/main_LBL_welcomeTo"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="30dp"
-                    android:layout_weight="8"
-                    android:gravity="center"
-                    android:maxLines="1"
-                    android:text="Trippy"
-                    android:textColor="@color/colorPrimaryDark"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
+            <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+                android:id="@+id/main_BAR_progressBar"
+                style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                app:mpb_progressStyle="horizontal" />
         </RelativeLayout>
 
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-            android:id="@+id/main_BAR_progressBar"
-            style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/main_LAY_coordinatorLayout"
-            android:indeterminate="true"
-            app:mpb_progressStyle="horizontal" />
+        <!-- TODO: Add timezone-->
+
 
         <RelativeLayout
             android:id="@+id/main_LAY_infoLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_above="@id/main_AD_adview"
-            android:layout_below="@id/main_LAY_titleLayout">
+            android:layout_below="@id/main_LAY_photoLayout"
+            android:layout_marginTop="20dp">
 
             <LinearLayout
                 android:id="@+id/main_LAY_currencyWeatherLayout"
@@ -173,12 +164,12 @@
 
         <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
             android:id="@+id/main_AD_adview"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-3940256099942544/6300978111" />
+            ads:adUnitId="@string/google_ads_test_id" />
     </RelativeLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

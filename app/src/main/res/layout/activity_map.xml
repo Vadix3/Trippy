@@ -43,7 +43,7 @@
                     android:background="@color/colorPrimary"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    app:menu="@menu/top_app_bar"
+                    app:menu="@menu/options_menu"
                     app:navigationIcon="@drawable/ic_menu_24dp"
                     app:title="Trippy App" />
 

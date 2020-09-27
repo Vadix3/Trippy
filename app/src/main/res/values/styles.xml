@@ -19,16 +19,9 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 
-    <style name="ShapeAppearanceOverlay.App.CornerSize70Percent" parent="">
-        <item name="cornerSizeTopLeft">70%</item>
-        <item name="cornerSizeBottomLeft">70%</item>
-    </style>
-
     <style name="ShapeAppearanceOverlay.App.CornerSize10Percent" parent="">
-        <item name="cornerSizeTopLeft">50%</item>
-        <item name="cornerSizeBottomLeft">50%</item>
-        <item name="cornerSizeTopRight">50%</item>
-        <item name="cornerSizeBottomRight">50%</item>
+        <item name="cornerSizeBottomRight">10%</item>
+
     </style>
 
     <style name="TextAppearance.App.CollapsingToolbar.Expanded" parent="TextAppearance.MaterialComponents.Headline5">
