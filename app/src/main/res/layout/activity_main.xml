@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+
 <androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main_LAY_mainDrawerlayout"
+    android:id="@+id/main_LAY_drawerlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clickable="true"
@@ -11,7 +13,6 @@
     android:focusableInTouchMode="true"
     android:orientation="vertical"
     tools:context=".Activities.MainActivity">
-
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/main_NAV_navigationView"
@@ -24,32 +25,28 @@
         app:itemTextColor="@color/quantum_black_100"
         app:menu="@menu/main_menu" />
 
-
-    <RelativeLayout
-        android:id="@+id/main_LAY_mainlayout"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_LAY_mainLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:fitsSystemWindows="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/main_LAY_coordinatorLayout"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.appbar.AppBarLayout
                 android:id="@+id/main_LAY_appBarLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
-                <com.google.android.material.appbar.MaterialToolbar
-                    android:id="@+id/main_LAY_MaterialToolBar"
-                    style="@style/Widget.MaterialComponents.Toolbar.Primary"
-                    android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    android:background="@color/colorPrimary"
-                    app:menu="@menu/options_menu"
-                    app:navigationIcon="@drawable/ic_menu_24dp"
-                    app:title="Trippy App" />
 
 
             </com.google.android.material.appbar.AppBarLayout>
@@ -58,9 +55,10 @@
             <!-- Note: A RecyclerView can also be used -->
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/main_LAY_scrollView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                tools:layout_editor_absoluteY="56dp">
 
                 <!-- Scrollable content -->
 
@@ -68,108 +66,193 @@
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-        <RelativeLayout
-            android:id="@+id/main_LAY_photoLayout"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_below="@id/main_LAY_coordinatorLayout">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/main_IMG_countryPhoto"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_alignParentTop="true"
-                android:scaleType="fitXY"
-                app:shapeAppearance="@style/ShapeAppearanceOverlay.App.CornerSize10Percent" />
-
-            <TextView
-                android:id="@+id/main_LBL_welcomeTo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_marginLeft="20dp"
-                android:layout_marginBottom="15dp"
-                android:maxLines="1"
-                android:shadowColor="#000000"
-                android:shadowDx="1.5"
-                android:shadowDy="1.3"
-                android:shadowRadius="3"
-                android:textColor="@color/white"
-                android:textSize="40sp"
-                android:visibility="invisible"
-                android:textStyle="bold" />
-
-            <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-                android:id="@+id/main_BAR_progressBar"
-                style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:indeterminate="true"
-                app:mpb_progressStyle="horizontal" />
-        </RelativeLayout>
 
         <!-- TODO: Add timezone-->
 
+        <!--        <fragment-->
+        <!--            android:id="@+id/fragment3"-->
+        <!--            android:name="com.example.trippy.Fragments.CurrencyFragment"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginBottom="210dp"-->
+        <!--            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintHorizontal_bias="1.0"-->
+        <!--            app:layout_constraintStart_toEndOf="@+id/fragment2"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/main_IMG_countryPhoto"-->
+        <!--            app:layout_constraintVertical_bias="0.0"-->
+        <!--            tools:layout="@layout/fragment_currency" />-->
 
-        <RelativeLayout
-            android:id="@+id/main_LAY_infoLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@id/main_AD_adview"
-            android:layout_below="@id/main_LAY_photoLayout"
-            android:layout_marginTop="20dp">
+        <!--        <fragment-->
+        <!--            android:id="@+id/fragment"-->
+        <!--            android:name="com.example.trippy.Fragments.CalendarFragment"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintHorizontal_bias="0.0"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/fragment2"-->
+        <!--            tools:layout="@layout/fragment_calendar" />-->
 
-            <LinearLayout
-                android:id="@+id/main_LAY_currencyWeatherLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+        <!--        <fragment-->
+        <!--            android:id="@+id/fragment4"-->
+        <!--            android:name="com.example.trippy.Fragments.TranslatorFragment"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginStart="11dp"-->
+        <!--            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toEndOf="@+id/fragment"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/fragment3"-->
+        <!--            tools:layout="@layout/fragment_translator" />-->
 
-                <FrameLayout
-                    android:id="@+id/main_LAY_weather"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:foreground="?attr/selectableItemBackground" />
+        <!--        <fragment-->
+        <!--            android:id="@+id/fragment2"-->
+        <!--            android:name="com.example.trippy.Fragments.WeatherFragment"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginBottom="210dp"-->
+        <!--            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintHorizontal_bias="0.0"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/main_IMG_countryPhoto"-->
+        <!--            app:layout_constraintVertical_bias="0.0"-->
+        <!--            tools:layout="@layout/fragment_weather" />-->
 
-                <FrameLayout
-                    android:id="@+id/main_LAY_currency"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/main_LAY_calendarTranslateLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/main_LAY_currencyWeatherLayout"
-                android:orientation="horizontal">
-
-                <FrameLayout
-                    android:id="@+id/main_LAY_calendar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <FrameLayout
-                    android:id="@+id/main_LAY_translate"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
-
-        </RelativeLayout>
-
-        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/main_AD_adview"
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            ads:adSize="BANNER"
-            ads:adUnitId="@string/google_ads_test_id" />
-    </RelativeLayout>
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
 
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/main_IMG_countryPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/main_LAY_MaterialToolBar"
+            app:layout_constraintVertical_bias="0.0"
+            app:shapeAppearance="@style/ShapeAppearanceOverlay.App.CornerSize10Percent" />
+
+        <TextView
+            android:id="@+id/main_LBL_welcomeTo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:maxLines="1"
+            android:shadowColor="#000000"
+            android:shadowDx="1.5"
+            android:shadowDy="1.3"
+            android:shadowRadius="3"
+            android:textColor="@color/white"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@+id/main_IMG_countryPhoto"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.97" />
+
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:id="@+id/main_BAR_progressBar"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.077"
+            app:mpb_progressStyle="horizontal" />
+
+        <FrameLayout
+            android:id="@+id/main_LAY_calendar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"
+            app:layout_constraintEnd_toStartOf="@id/main_LAY_translate"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/main_LAY_weather" />
+
+        <FrameLayout
+            android:id="@+id/main_LAY_translate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="11dp"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toTopOf="@+id/main_AD_adview"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintLeft_toRightOf="@+id/main_LAY_calendar"
+            app:layout_constraintTop_toBottomOf="@+id/main_LAY_currency" />
+
+        <FrameLayout
+            android:id="@+id/main_LAY_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toTopOf="@id/main_LAY_calendar"
+            app:layout_constraintEnd_toStartOf="@id/main_LAY_currency"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/main_IMG_countryPhoto"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <FrameLayout
+            android:id="@+id/main_LAY_currency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toTopOf="@id/main_LAY_translate"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintLeft_toRightOf="@+id/main_LAY_weather"
+            app:layout_constraintTop_toBottomOf="@+id/main_IMG_countryPhoto"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/main_AD_adview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:adSize="BANNER"
+            app:adUnitId="@string/google_ads_real_id"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.494"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/main_LAY_MaterialToolBar"
+            style="@style/Widget.MaterialComponents.Toolbar.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:menu="@menu/options_menu"
+            app:navigationIcon="@drawable/ic_menu_24dp"
+            app:title="Trippy App" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -19,10 +19,18 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 
+
     <style name="ShapeAppearanceOverlay.App.CornerSize10Percent" parent="">
         <item name="cornerSizeBottomRight">10%</item>
-
     </style>
+
+
+    <style name="LoginPageIcon" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
+
+
+
 
     <style name="TextAppearance.App.CollapsingToolbar.Expanded" parent="TextAppearance.MaterialComponents.Headline5">
         <item name="android:textColor">?attr/colorOnPrimary</item>
@@ -38,5 +46,22 @@
         <item name="android:layout_marginBottom">10dp</item>
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
+
+
+    <!-- Colors -->
+    <style name="CoolGreenTheme">
+        <item name="colorPrimary">@color/coolGreen</item>
+        <item name="colorPrimaryDark">@color/coolGreenDark</item>
+    </style>
+    <style name="PassionRedTheme">
+        <item name="colorPrimary">@color/passionRed</item>
+        <item name="colorPrimaryDark">@color/passionRedDark</item>
+    </style>
+    <style name="SkyBlueTheme">
+        <item name="colorPrimary">@color/skyBlue</item>
+        <item name="colorPrimaryDark">@color/skyBlueDark</item>
+    </style>
+
+
 
 </resources>

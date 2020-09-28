@@ -10,6 +10,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -27,7 +28,7 @@ import com.karumi.dexter.listener.single.PermissionListener;
 
 public class PermissionsActivity extends AppCompatActivity {
 
-    private Button btnGrant;
+    private TextView btnGrant;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

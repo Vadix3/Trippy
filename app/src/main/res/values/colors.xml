@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#00C163</color>
+    <color name="colorPrimary">#00BFA5</color>
     <color name="colorPrimaryTransparant">#33000000</color>
     <color name="colorPrimaryDark">#3F51B5</color>
     <color name="colorAccent">#03DAC5</color>
     <color name="coolBlue">#448AFF</color>
-    <color name="coolGreen">#00E676</color>
     <color name="coolRed">#D50000</color>
     <color name="dateColor">#18FFFF</color>
     <color name="eventColor">#FF5722</color>
@@ -15,5 +14,16 @@
             <item android:alpha="0.12" android:color="?attr/colorOnSurface" android:state_checked="false" />
         </selector>
     </color>
+
+    <!-- Theme colors -->
+    <color name="coolGreen">#00BFA5</color>
+    <color name="passionRed">#FF1744</color>
+    <color name="skyBlue">#00B0FF</color>
+
+
+    <color name="coolGreenDark">#008846</color>
+    <color name="passionRedDark">#AE112F</color>
+    <color name="skyBlueDark">#006A9A</color>
+
 
 </resources>

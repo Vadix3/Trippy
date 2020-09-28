@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
@@ -13,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.location.Address;
 import android.location.Geocoder;
@@ -22,10 +24,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,10 +48,10 @@ import com.example.trippy.R;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -100,6 +100,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -125,13 +126,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Views
      */
     //Layouts
+    private ConstraintLayout mainLayout;
     private DrawerLayout mainDrawerLayout;
-    private RelativeLayout mainLayout;
-    private LinearLayout currencyWeatherLayout;
-    private DrawerLayout drawerLayout;
 
     //Cards
-    private MaterialCardView currencyCard;
     private WeatherFragment weatherFragment;
     private CurrencyFragment currencyFragment;
 
@@ -146,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //Other
     private MaterialToolbar materialToolbar;
     private NavigationView navigationView;
+    private Intent starterIntent;
     /**
      * Location
      */
@@ -160,7 +159,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Variables
      */
-
+    private boolean useAlternativeTheme = false;
+    private int alternativeTheme;
 
     /**
      * Login stuff
@@ -181,10 +181,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public Resources.Theme getTheme() {
+        Resources.Theme theme = super.getTheme();
+        if (useAlternativeTheme) {
+            theme.applyStyle(alternativeTheme, true);
+        }
+        // you could also use a switch if you have many themes that could apply
+        return theme;
+    }
+
+    /**
+     * A method to check if theme change selected
+     */
+    private void checkForThemeChange() {
+        Log.d(TAG, "checkForThemeChange: Checking if theme change is needed");
+        starterIntent = getIntent();
+        int myTheme = starterIntent.getIntExtra("Theme", 0);
+        Log.d(TAG, "onCreate: Got theme: " + myTheme);
+        if (myTheme != 0) {
+            Log.d(TAG, "onCreate: Using alternative theme");
+            useAlternativeTheme = true;
+            alternativeTheme = myTheme;
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mainLayout = findViewById(R.id.main_LAY_mainlayout);
+        mainDrawerLayout = findViewById(R.id.main_LAY_drawerlayout);
+        mainLayout = findViewById(R.id.main_LAY_mainLayout);
         makeSnackbar("Loading location data", R.color.colorPrimary);
         initAdStuff();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
@@ -304,23 +330,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void initViews() {
         Log.d(TAG, "initViews: Initing views");
-        mainDrawerLayout = findViewById(R.id.main_LAY_mainDrawerlayout);
-        mainDrawerLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean b) {
-                if (b) {
-                    Log.d(TAG, "onFocusChange: Main layout focused");
-                }
-            }
-        });
-
         // Progress bar
         loadingBar = findViewById(R.id.main_BAR_progressBar);
         loadingBar.setIndeterminate(true);
-
-        currencyWeatherLayout = findViewById(R.id.main_LAY_currencyWeatherLayout);
-        currencyWeatherLayout.setVisibility(View.GONE);
-        drawerLayout = findViewById(R.id.main_LAY_mainDrawerlayout);
         navigationView = findViewById(R.id.main_NAV_navigationView);
         welcomeLabel = findViewById(R.id.main_LBL_welcomeTo);
         materialToolbar = findViewById(R.id.main_LAY_MaterialToolBar);
@@ -341,6 +353,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         AdView adView = findViewById(R.id.main_AD_adview);
+
+        List<String> testDevices = new ArrayList<>();
+        testDevices.add(AdRequest.DEVICE_ID_EMULATOR);
+
+        RequestConfiguration requestConfiguration
+                = new RequestConfiguration.Builder()
+                .setTestDeviceIds(Arrays.asList("5CDF34BEA69F1E91F593CD15EECE6861"))
+//                .setTestDeviceIds(Arrays.asList("578901E7A8512BC68254FE4960F5BDE1"))
+                .build();
+        MobileAds.setRequestConfiguration(requestConfiguration);
+
         AdRequest adRequest = new AdRequest.Builder()
                 .build();
         adView.loadAd(adRequest);
@@ -398,8 +421,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case R.id.options_language:
                         makeToast("Language selected");
                         return true;
-                    case R.id.nav_color_grassGreen:
-                        makeToast("GrassGreen Theme selected");
+                    case R.id.nav_color_coolGreen:
+                        makeToast("CoolGreen Theme selected");
                         return true;
                     case R.id.nav_color_passionRed:
                         makeToast("PassionRed Theme selected");
@@ -426,15 +449,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         materialToolbar.setTitle("Hi " + myUser.getFirstMame() + "!");
 //        setSupportActionBar(materialToolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, materialToolbar
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, mainDrawerLayout, materialToolbar
                 , R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
+        mainDrawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.nav_home);
         navigationView.bringToFront();
     }
-
 
 
     /**
@@ -509,10 +531,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * A method to open a new location request
      */
     private LocationRequest openLocationRequest() {
+        Log.d(TAG, "openLocationRequest: Opening location request");
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setExpirationDuration(30000);
         return locationRequest;
     }
 
@@ -559,6 +583,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.d(TAG, "onComplete: Result is null, requesting location update");
                         //Request
                         final LocationRequest locationRequest = openLocationRequest();
+
+//                        LG fix
+//                        TODO: Fix lg problem
+//                        updateUItoMatchLocation();
+
+
                         //Callback
                         locationCallback = new LocationCallback() {
                             /** We tried to get the last location from the fusedLocationProvider,
@@ -578,11 +608,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 updateUItoMatchLocation();
                                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
                             }
+
                         };
                         fusedLocationProviderClient.requestLocationUpdates(locationRequest
                                 , locationCallback, null);
                     }
                 } else { // In case we were unable to get last known location
+                    Log.d(TAG, "onComplete: Im here unable to get last known location");
                     Toast.makeText(MainActivity.this, "Unable to get last location"
                             , Toast.LENGTH_SHORT).show();
                 }
@@ -868,8 +900,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getLocationWeather() {
         Log.d(TAG, "getLocationWeather: Getting city weather");
         makeSnackbar("Getting weather", R.color.colorPrimary);
-        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + myCurrentTrip.getCity()
-                + "&units=metric&appid=" + getString(R.string.open_weather_api_key);
+        //TODO: Get weather in multiple locales
+
+//        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + myCurrentTrip.getCity()
+//                + "&units=metric&appid=" + getString(R.string.open_weather_api_key);
+
+        String url = "https://api.weatherbit.io/v2.0/current?city=" + myCurrentTrip.getCity()
+                + "&key=" + getString(R.string.weather_icons_api_key);
 
         Log.d(TAG, "getLocationWeather: Requesting: " + url);
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -886,7 +923,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        getMainLooper().prepare();
                         makeToast("Weather not available");
                         //TODO: Crashes here: "Can't create handler inside thread Thread"
                         weatherFragment = new WeatherFragment(null
@@ -905,19 +941,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d(TAG, "onResponse: " + weatherString);
 
                 try {
-                    JSONObject obj = new JSONObject(weatherString);
-                    JSONArray firstContainer = obj.getJSONArray("weather");
-                    JSONObject first = (JSONObject) firstContainer.get(0);
-                    JSONObject second = (JSONObject) obj.get("main");
+//                    JSONObject obj = new JSONObject(weatherString);
+//                    JSONArray firstContainer = obj.getJSONArray("weather");
+//                    JSONObject first = (JSONObject) firstContainer.get(0);
+//                    JSONObject second = (JSONObject) obj.get("main");
+//
+//                    String iconID = (String) first.get("icon");
+//                    String weatherDescription = (String) first.get("description");
+//                    String realTemp;
+//                    if (second.get("temp") instanceof Integer) {
+//                        realTemp = "" + Math.round((int) second.get("temp"));
+//                    } else {
+//                        realTemp = "" + Math.round((double) second.get("temp"));
+//                    }
 
-                    String iconID = (String) first.get("icon");
-                    String weatherDescription = (String) first.get("description");
-                    String realTemp;
-                    if (second.get("temp") instanceof Integer) {
-                        realTemp = "" + Math.round((int) second.get("temp"));
-                    } else {
-                        realTemp = "" + Math.round((double) second.get("temp"));
-                    }
+                    JSONObject obj = new JSONObject(weatherString);
+                    JSONArray containerArray = (JSONArray) obj.get("data");
+                    JSONObject container = (JSONObject) containerArray.get(0);
+                    JSONObject weatherDescriptionJson = (JSONObject) container.get("weather");
+                    String realTemp = "" + (double) container.get("temp");
+                    String iconID = (String) weatherDescriptionJson.get("icon");
+                    String weatherDescription = (String) weatherDescriptionJson.get("description");
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -968,7 +1012,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             welcomeLabel.setText("" + myCurrentTrip.getTripName());
             initCalendarFragment();
             initTranslatorFragment();
-            currencyWeatherLayout.setVisibility(View.VISIBLE);
             if (snackbar != null) {
                 snackbar.dismiss();
             }
@@ -1101,7 +1144,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d(TAG, "getResult: Null results, user did not want to enter trip details");
             initCalendarFragment();
             initTranslatorFragment();
-            currencyWeatherLayout.setVisibility(View.VISIBLE);
             saveUserToFirestore();
             loadingBar.setIndeterminate(false);
             loadingBar.setVisibility(View.GONE);
@@ -1124,7 +1166,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         welcomeLabel.setText("" + tripName);
         initCalendarFragment();
         initTranslatorFragment();
-        currencyWeatherLayout.setVisibility(View.VISIBLE);
         loadingBar.setIndeterminate(false);
         loadingBar.setVisibility(View.GONE);
         welcomeLabel.setVisibility(View.VISIBLE);
@@ -1204,8 +1245,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
+        if (mainDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mainDrawerLayout.closeDrawer(GravityCompat.START);
             return;
         }
         super.onBackPressed();
@@ -1231,7 +1272,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 makeToast("Moving home");
                 break;
         }
-        drawerLayout.closeDrawer(GravityCompat.START);
+        mainDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
