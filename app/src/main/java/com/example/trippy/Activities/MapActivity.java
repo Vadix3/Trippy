@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
 
+import com.bumptech.glide.Glide;
 import com.example.trippy.Dialogs.PlaceDetailsDialog;
 import com.example.trippy.Fragments.SearchTypeFragment;
 import com.example.trippy.Interfaces.OnSearchTypeSelectedListener;
@@ -212,9 +213,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
-
         navigationView.setCheckedItem(R.id.nav_map);
-
 //        Menu menu = navigationView.getMenu();
 //        menu.findItem(R.id.nav_profile).setVisible(false);
     }
@@ -261,7 +260,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 switch (buttonCode) {
                     case MaterialSearchBar.BUTTON_NAVIGATION:
                         Log.d(TAG, "onButtonClicked: button navigation");
-                        //opening or closing a navigation drawer
+
                         break;
                     case MaterialSearchBar.BUTTON_BACK:
                         if (materialSearchBar.isSuggestionsVisible())
@@ -279,7 +278,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 Log.d(TAG, "onTextChanged: new prediction request");
-                centerMarker.setVisibility(View.VISIBLE);
+//                centerMarker.setVisibility(View.VISIBLE);
                 LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
                 double tempLat = currentMarkerLocation.latitude;
                 double tempLon = currentMarkerLocation.longitude;
@@ -378,7 +377,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         Log.d(TAG, "onSuccess: Fetching successfull: " + place.getLatLng().toString());
                         if (place != null) {
                             mySearchType = "default";
-                            centerMarker.setVisibility(View.INVISIBLE);
+//                            centerMarker.setVisibility(View.INVISIBLE);
                             addMarkerToMap(place);
                             moveCamera(place.getLatLng(), DEFAULT_ZOOM);
                         }
@@ -409,7 +408,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private void searchForGivenPlacesAroundMe() {
         Log.d(TAG, "searchForGivenPlacesAroundMe: Ripple animation");
-        centerMarker.setVisibility(View.VISIBLE);
+//        centerMarker.setVisibility(View.VISIBLE);
         LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
         rippleBackground.startRippleAnimation();
         openHttpRequestForPlaces(currentMarkerLocation);

@@ -35,6 +35,7 @@ public class PermissionsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_permissions);
 
+        //TODO: Allow location always
         if (ContextCompat.checkSelfPermission(PermissionsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED) { // Permission already granted, quit and countinue
             startActivity(new Intent(PermissionsActivity.this, LoginActivity.class));

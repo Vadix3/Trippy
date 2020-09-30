@@ -9,6 +9,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
@@ -16,6 +17,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Resources;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -24,13 +26,19 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blongho.country_data.World;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.trippy.Dialogs.NewCountryDialog;
 import com.example.trippy.Dialogs.NewTripDialog;
 import com.example.trippy.Fragments.CalendarFragment;
@@ -73,11 +81,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -91,6 +99,7 @@ import com.squareup.okhttp.Response;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -107,9 +116,11 @@ import java.util.List;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
 //TODO:Deal with no internet problems. dont make user wait for response from server.
-public class MainActivity extends AppCompatActivity implements View.OnClickListener
-        , OnNewTripCallbackListener, OnCalendarDialogDismissedListener, OnSelectedCountryListener
-        , NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements
+        OnNewTripCallbackListener,
+        OnCalendarDialogDismissedListener,
+        OnSelectedCountryListener,
+        NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "pttt";
     private static final String NEW_TRIP_DIALOG = "newTripDialog";
@@ -132,6 +143,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //Cards
     private WeatherFragment weatherFragment;
     private CurrencyFragment currencyFragment;
+
+    private FrameLayout currencyFrame;
+    private FrameLayout weatherFrame;
+    private FrameLayout translateFrame;
+    private FrameLayout calendarFrame;
 
 
     //TextViews
@@ -209,13 +225,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true);
         mainDrawerLayout = findViewById(R.id.main_LAY_drawerlayout);
         mainLayout = findViewById(R.id.main_LAY_mainLayout);
+        glideToBackground(mainLayout, R.drawable.main_background5);
         makeSnackbar("Loading location data", R.color.colorPrimary);
         initAdStuff();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         getUserDataFromLogin(getIntent().getIntExtra("loginCode", 0));
     }
+
+    /**
+     * A method to insert image to view background with glide
+     */
+    private void glideToBackground(final View target, int pictureID) {
+        Glide.with(target).load(pictureID).into(new CustomTarget<Drawable>() {
+            @Override
+            public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                target.setBackground(resource);
+            }
+
+            @Override
+            public void onLoadCleared(@Nullable Drawable placeholder) {
+            }
+        });
+    }
+
 
     /**
      * A method to get the users name and email from login
@@ -275,6 +310,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     myContainer = documentSnapshot.toObject(MyContainer.class);
                     myCurrentTrip = myContainer.getMyTrip();
                     myUser = myContainer.getMyUser();
+                    TextView drawerName = findViewById(R.id.drawer_LBL_name);
+                    drawerName.setText(myUser.getFirstMame() + " " + myUser.getLastName());
+                    TextView drawerEmail = findViewById(R.id.drawer_LBL_email);
+                    drawerEmail.setText(myUser.getEmailAddress());
                     Log.d(TAG, "onSuccess: Got user: " + myUser.toString());
                     isLocationEnabled();
                     initViews();
@@ -331,6 +370,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initViews() {
         Log.d(TAG, "initViews: Initing views");
         // Progress bar
+        currencyFrame = findViewById(R.id.main_LAY_currency);
+        weatherFrame = findViewById(R.id.main_LAY_weather);
+        translateFrame = findViewById(R.id.main_LAY_translate);
+        calendarFrame = findViewById(R.id.main_LAY_calendar);
+
+
         loadingBar = findViewById(R.id.main_BAR_progressBar);
         loadingBar.setIndeterminate(true);
         navigationView = findViewById(R.id.main_NAV_navigationView);
@@ -456,6 +501,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.nav_home);
         navigationView.bringToFront();
+        ImageView drawerBackground = findViewById(R.id.drawer_IMG_background);
+        Glide.with(drawerBackground).load(R.drawable.drawer_background).into(drawerBackground);
     }
 
 
@@ -470,7 +517,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         transaction.commit();
         loadingBar.setIndeterminate(false);
         loadingBar.setVisibility(View.GONE);
+        showMainLayout();
+    }
+
+    /**
+     * A method to show the main layout features
+     */
+    private void showMainLayout() {
+        Log.d(TAG, "showMainLayout: Done with everything, showing main layout");
+        countryPhoto.setVisibility(View.VISIBLE);
         welcomeLabel.setVisibility(View.VISIBLE);
+        currencyFrame.setVisibility(View.VISIBLE);
+        weatherFrame.setVisibility(View.VISIBLE);
+        translateFrame.setVisibility(View.VISIBLE);
+        calendarFrame.setVisibility(View.VISIBLE);
     }
 
 
@@ -693,7 +753,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Glide.with(countryPhoto).load(imageUrl).into(countryPhoto);
+                                // create a ProgressDrawable object which we will show as placeholder
+                                CircularProgressDrawable drawable = new CircularProgressDrawable(MainActivity.this);
+                                drawable.setColorSchemeColors(R.color.colorPrimary, R.color.colorPrimaryDark, R.color.colorAccent);
+                                drawable.setCenterRadius(30f);
+                                drawable.setStrokeWidth(5f);
+                                // set all other properties as you would see fit and start it
+                                drawable.start();
+                                Glide.with(countryPhoto)
+                                        .load(imageUrl)
+                                        .placeholder(drawable)
+                                        .listener(new RequestListener<Drawable>() {
+                                            @Override
+                                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                                Log.d(TAG, "onLoadFailed: Load failed!");
+                                                countryPhoto.setImageResource(R.color.colorPrimary);
+                                                return false;
+                                            }
+
+                                            @Override
+                                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                                Log.d(TAG, "onResourceReady: Load successful!");
+                                                return false;
+                                            }
+                                        })
+                                        .into(countryPhoto);
                             }
                         });
                     }
@@ -737,7 +821,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        final int flag = World.getFlagOf(countryCode);
 //
 //
-//        ImageView flagImageLeft = findViewById(R.id.main_IMG_flagImageLeft);
+//        ImageView flagImageLeft = findViewById(R.id.drawer_IMG_background);
 //        Glide.with(flagImageLeft).load(flag).into(flagImageLeft);
 //        flagImageLeft.setImageResource(flag);
 //        flagImageLeft.setVisibility(View.VISIBLE);
@@ -959,7 +1043,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     JSONArray containerArray = (JSONArray) obj.get("data");
                     JSONObject container = (JSONObject) containerArray.get(0);
                     JSONObject weatherDescriptionJson = (JSONObject) container.get("weather");
-                    String realTemp = "" + (double) container.get("temp");
+
+                    Object realTempObject = container.get("temp");
+                    String myRealTemp = "";
+                    if (realTempObject instanceof Integer) {
+                        myRealTemp = "" + Math.round((int) container.get("temp"));
+                    } else {
+                        myRealTemp = "" + Math.round((double) container.get("temp"));
+                    }
+                    final String realTemp = myRealTemp;
+
+
                     String iconID = (String) weatherDescriptionJson.get("icon");
                     String weatherDescription = (String) weatherDescriptionJson.get("description");
                     runOnUiThread(new Runnable() {
@@ -972,7 +1066,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             transaction1.commit();
                             loadingBar.setIndeterminate(false);
                             loadingBar.setVisibility(View.GONE);
-                            welcomeLabel.setVisibility(View.VISIBLE);
                             checkForTripDetails();
                         }
                     });
@@ -989,7 +1082,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             transaction1.commit();
                             loadingBar.setIndeterminate(false);
                             loadingBar.setVisibility(View.GONE);
-                            welcomeLabel.setVisibility(View.VISIBLE);
                             checkForTripDetails();
                         }
                     });
@@ -1147,7 +1239,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             saveUserToFirestore();
             loadingBar.setIndeterminate(false);
             loadingBar.setVisibility(View.GONE);
-            welcomeLabel.setVisibility(View.VISIBLE);
             if (snackbar != null) {
                 snackbar.dismiss();
             }
@@ -1168,7 +1259,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initTranslatorFragment();
         loadingBar.setIndeterminate(false);
         loadingBar.setVisibility(View.GONE);
-        welcomeLabel.setVisibility(View.VISIBLE);
         if (snackbar != null) {
             snackbar.dismiss();
         }
@@ -1310,11 +1400,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         intent.putExtra("LOGGED_OUT", 1);
         startActivity(intent);
         finish();
-    }
-
-    @Override
-    public void onClick(View view) {
-
     }
 }
 
