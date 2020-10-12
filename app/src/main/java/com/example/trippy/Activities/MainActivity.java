@@ -13,6 +13,7 @@ import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Resources;
@@ -39,6 +40,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.trippy.Dialogs.CountryImageDialog;
 import com.example.trippy.Dialogs.NewCountryDialog;
 import com.example.trippy.Dialogs.NewTripDialog;
 import com.example.trippy.Fragments.CalendarFragment;
@@ -361,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements
         int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
         newCountryDialog.getWindow().setLayout(width, height);
         newCountryDialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
-        newCountryDialog.getWindow().setDimAmount(0.9f);
+        newCountryDialog.getWindow().setDimAmount(1f);
     }
 
     /**
@@ -383,6 +385,21 @@ public class MainActivity extends AppCompatActivity implements
         materialToolbar = findViewById(R.id.main_LAY_MaterialToolBar);
         countryPhoto = findViewById(R.id.main_IMG_countryPhoto);
         setToolbarStuff();
+    }
+
+    /**
+     * A method to display the country image dialog
+     */
+    private void openCountryImageDialog(String url) {
+        Log.d(TAG, "onClick: Opening country image");
+        //TODO: If problem then here
+        CountryImageDialog countryImageDialog = new CountryImageDialog(this, url);
+        countryImageDialog.show();
+        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.5);
+        int width = (int) (getResources().getDisplayMetrics().widthPixels);
+        countryImageDialog.getWindow().setLayout(width, height);
+        countryImageDialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        countryImageDialog.getWindow().setDimAmount(0.99f);
     }
 
     /**
@@ -503,6 +520,7 @@ public class MainActivity extends AppCompatActivity implements
         navigationView.bringToFront();
         ImageView drawerBackground = findViewById(R.id.drawer_IMG_background);
         Glide.with(drawerBackground).load(R.drawable.drawer_background).into(drawerBackground);
+        //TODO: Set navigation view background here
     }
 
 
@@ -532,7 +550,6 @@ public class MainActivity extends AppCompatActivity implements
         translateFrame.setVisibility(View.VISIBLE);
         calendarFrame.setVisibility(View.VISIBLE);
     }
-
 
     /**
      * A method to open the map activity
@@ -605,18 +622,22 @@ public class MainActivity extends AppCompatActivity implements
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        Log.d(TAG, "onActivityResult: check what user decided");
+        Log.d(TAG, "onActivityResult: request code: " + requestCode + " result code: " + resultCode);
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 51) {
-            // User has toggled location on
-            if (resultCode == RESULT_OK) {
-                Log.d(TAG, "onActivityResult: User enabled location");
-                // Find users current location
-                // Move the map to users current location
-                getDeviceLocation();
-            } else {
-                Log.d(TAG, "onActivityResult: User decided not to turn on location");
-            }
+        switch (requestCode) {
+            case 51:
+                Log.d(TAG, "onActivityResult: Got from permissions activity");
+                // User has toggled location on
+                if (resultCode == RESULT_OK) {
+                    Log.d(TAG, "onActivityResult: User enabled location");
+                    // Find users current location
+                    // Move the map to users current location
+                    getDeviceLocation();
+                } else {
+                    Log.d(TAG, "onActivityResult: User decided not to turn on location");
+                    //TODO: what to do in case user decided not to turn on location
+                }
+                break;
         }
     }
 
@@ -691,7 +712,7 @@ public class MainActivity extends AppCompatActivity implements
         //Khabarovsk
 //        myLocationLatLng = new LatLng(48.4814, 135.0721);
         //Prague
-        myLocationLatLng = new LatLng(50.0755, 14.4378);
+//        myLocationLatLng = new LatLng(50.0755, 14.4378);
         //Berlin
 //        myLocationLatLng = new LatLng(52.5200, 13.4050);
         //Rio
@@ -703,7 +724,8 @@ public class MainActivity extends AppCompatActivity implements
         //Barcelona
 //        myLocationLatLng = new LatLng(41.3851, 2.1734);
         //Real location
-//        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
+        //TODO: Detect country change, delete trip after time
+        myLocationLatLng = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
         Log.d(TAG, "updateUItoMatchLocation: location: " + myLocationLatLng.toString());
         makeSnackbar("Getting country", R.color.colorPrimary);
 
@@ -749,6 +771,16 @@ public class MainActivity extends AppCompatActivity implements
                     } else {
                         JSONObject urlContainer = (JSONObject) array.get(0);
                         String imageUrl = (String) urlContainer.get("largeImageURL");
+
+
+                        countryPhoto.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                openCountryImageDialog(imageUrl);
+                            }
+                        });
+
+
                         Log.d(TAG, "onResponse: Image url: " + imageUrl);
                         runOnUiThread(new Runnable() {
                             @Override
@@ -774,10 +806,12 @@ public class MainActivity extends AppCompatActivity implements
                                             @Override
                                             public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                                                 Log.d(TAG, "onResourceReady: Load successful!");
+
                                                 return false;
                                             }
                                         })
                                         .into(countryPhoto);
+
                             }
                         });
                     }
@@ -1220,7 +1254,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void initCalendarFragment() {
         Log.d(TAG, "initCalendarFragment: Creating calendar fragment with trip: " + myCurrentTrip.toString());
-        CalendarFragment calendarFragment = new CalendarFragment(myCurrentTrip);
+        CalendarFragment calendarFragment = new CalendarFragment(myCurrentTrip,myLocationLatLng);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.main_LAY_calendar, calendarFragment);
         transaction.commit();

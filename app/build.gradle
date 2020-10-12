@@ -54,6 +54,8 @@ dependencies {
     implementation 'com.loopj.android:android-async-http:1.4.9'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'me.zhanghai.android.materialprogressbar:library:1.6.1'
+    implementation 'com.bogdwellers:pinchtozoom:0.1'
+
 
     //Github
     implementation 'com.github.mancj:MaterialSearchBar:0.8.5'

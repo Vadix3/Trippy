@@ -60,6 +60,9 @@
         <activity
             android:name=".Activities.MapActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".Activities.CalendarActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity android:name=".Activities.MainActivity" />
     </application>

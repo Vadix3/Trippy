@@ -166,7 +166,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         drawerLayout = findViewById(R.id.map_LAY_mainDrawerlayout);
         materialToolbar = findViewById(R.id.map_LAY_MaterialToolBar);
         navigationView = findViewById(R.id.map_NAV_navigationView);
-
         materialSearchBar = findViewById(R.id.contentMap_SBR_searchBar);
         rippleBackground = findViewById(R.id.contentMap_RPL_ripple);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MapActivity.this);
@@ -180,11 +179,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
                 searchForGivenPlacesAroundMe();
 
-                /**
-                 style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-                 app:strokeColor="@color/colorPrimary"
-                 app:strokeWidth="1dp"
-                 */
             }
         };
 
