@@ -28,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +40,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.trippy.Dialogs.AboutDialog;
 import com.example.trippy.Dialogs.CountryImageDialog;
 import com.example.trippy.Dialogs.NewCountryDialog;
 import com.example.trippy.Dialogs.NewTripDialog;
@@ -480,29 +482,26 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.options_language:
-                        makeToast("Language selected");
-                        return true;
                     case R.id.nav_color_coolGreen:
-                        makeToast("CoolGreen Theme selected");
+                        makeToast("CoolGreen Theme selected - *IN CONSTRUCTION*");
                         return true;
                     case R.id.nav_color_passionRed:
-                        makeToast("PassionRed Theme selected");
+                        makeToast("PassionRed Theme selected - *IN CONSTRUCTION*");
                         return true;
                     case R.id.nav_color_skyBlue:
-                        makeToast("SkyBlue Theme selected");
+                        makeToast("SkyBlue Theme selected - *IN CONSTRUCTION*");
                         return true;
                     case R.id.options_about:
-                        makeToast("About selected");
+                        openAboutDialog();
                         return true;
                     case R.id.nav_language_hebrew:
-                        makeToast("Hebrew language selected");
+                        makeToast("Hebrew language selected - *IN CONSTRUCTION*");
                         return true;
                     case R.id.nav_language_russian:
-                        makeToast("Russian language selected");
+                        makeToast("Russian language selected - *IN CONSTRUCTION*");
                         return true;
                     case R.id.nav_language_english:
-                        makeToast("English language selected");
+                        makeToast("English language selected - *IN CONSTRUCTION*");
                         return true;
                 }
                 return false;
@@ -521,6 +520,20 @@ public class MainActivity extends AppCompatActivity implements
         ImageView drawerBackground = findViewById(R.id.drawer_IMG_background);
         Glide.with(drawerBackground).load(R.drawable.drawer_background).into(drawerBackground);
         //TODO: Set navigation view background here
+    }
+
+    /**
+     * A method to open about dialog
+     */
+    private void openAboutDialog() {
+        Log.d(TAG, "openAboutDialog: Opening about dialog");
+        AboutDialog dialog = new AboutDialog(this);
+        dialog.show();
+        int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.5);
+        int width = (int) (getResources().getDisplayMetrics().widthPixels);
+        dialog.getWindow().setLayout(width, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        dialog.getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        dialog.getWindow().setDimAmount(0.99f);
     }
 
 
@@ -1402,10 +1415,10 @@ public class MainActivity extends AppCompatActivity implements
                 logoutFromApp();
                 break;
             case R.id.nav_share:
-                makeToast("Opening share");
+                makeToast("Opening share - *IN CONSTRUCTION*");
                 break;
             case R.id.nav_rate:
-                makeToast("Moving to rate");
+                makeToast("Moving to rate - *IN CONSTRUCTION*");
                 break;
             case R.id.nav_home:
                 makeToast("Moving home");
