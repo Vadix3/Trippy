@@ -27,47 +27,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.coordinatorlayout.widget.CoordinatorLayout
-            android:id="@+id/map_LAY_coordinatorLayout"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
-
-            <com.google.android.material.appbar.AppBarLayout
-                android:id="@+id/map_LAY_appBarLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <com.google.android.material.appbar.MaterialToolbar
-                    android:id="@+id/map_LAY_MaterialToolBar"
-                    style="@style/Widget.MaterialComponents.Toolbar.Primary"
-                    android:background="@color/colorPrimary"
-                    android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    app:menu="@menu/options_menu"
-                    app:navigationIcon="@drawable/ic_baseline_arrow_back_ios_24"
-                    app:title="Trippy App" />
-
-            </com.google.android.material.appbar.AppBarLayout>
-
-            <!-- Note: A RecyclerView can also be used -->
-            <androidx.core.widget.NestedScrollView
-                android:id="@+id/map_LAY_scrollView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                <!-- Scrollable content -->
-
-            </androidx.core.widget.NestedScrollView>
-
-        </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
         <include
             android:id="@+id/activityMap_FRG_mapFragment"
             layout="@layout/places_map"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/map_LAY_coordinatorLayout"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true" />
 

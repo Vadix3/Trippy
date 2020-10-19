@@ -56,7 +56,6 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:src="@drawable/ic_pin"
-            android:visibility="invisible"
             android:translationY="-18dp" />
     </com.skyfishjy.library.RippleBackground>
 

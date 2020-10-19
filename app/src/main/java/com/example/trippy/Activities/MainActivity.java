@@ -13,7 +13,6 @@ import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Resources;
@@ -47,6 +46,7 @@ import com.example.trippy.Fragments.CalendarFragment;
 import com.example.trippy.Fragments.CurrencyFragment;
 import com.example.trippy.Fragments.TranslatorFragment;
 import com.example.trippy.Fragments.WeatherFragment;
+import com.example.trippy.Interfaces.EventsArrayCallback;
 import com.example.trippy.Interfaces.OnCalendarDialogDismissedListener;
 import com.example.trippy.Interfaces.OnNewTripCallbackListener;
 import com.example.trippy.Interfaces.OnSelectedCountryListener;
@@ -101,7 +101,6 @@ import com.squareup.okhttp.Response;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -122,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements
         OnNewTripCallbackListener,
         OnCalendarDialogDismissedListener,
         OnSelectedCountryListener,
+        EventsArrayCallback,
         NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "pttt";
@@ -635,10 +635,19 @@ public class MainActivity extends AppCompatActivity implements
                     getDeviceLocation();
                 } else {
                     Log.d(TAG, "onActivityResult: User decided not to turn on location");
-                    //TODO: what to do in case user decided not to turn on location
+                    loadUsersLastKnownLocation();
                 }
                 break;
         }
+    }
+
+    /**
+     * A method to load UI in case of unknown location
+     */
+    private void loadUsersLastKnownLocation() {
+        Log.d(TAG, "loadUsersLastKnownLocation: Loading last known location");
+        //mLastKnownLocation = locationResult.getLastLocation();
+        //TODO: load last users locaion from firestore
     }
 
     /**
@@ -779,8 +788,6 @@ public class MainActivity extends AppCompatActivity implements
                                 openCountryImageDialog(imageUrl);
                             }
                         });
-
-
                         Log.d(TAG, "onResponse: Image url: " + imageUrl);
                         runOnUiThread(new Runnable() {
                             @Override
@@ -811,7 +818,6 @@ public class MainActivity extends AppCompatActivity implements
                                             }
                                         })
                                         .into(countryPhoto);
-
                             }
                         });
                     }
@@ -1254,7 +1260,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void initCalendarFragment() {
         Log.d(TAG, "initCalendarFragment: Creating calendar fragment with trip: " + myCurrentTrip.toString());
-        CalendarFragment calendarFragment = new CalendarFragment(myCurrentTrip,myLocationLatLng);
+        CalendarFragment calendarFragment = new CalendarFragment(myCurrentTrip, myLocationLatLng);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.main_LAY_calendar, calendarFragment);
         transaction.commit();
@@ -1373,7 +1379,16 @@ public class MainActivity extends AppCompatActivity implements
             mainDrawerLayout.closeDrawer(GravityCompat.START);
             return;
         }
+        saveLastKnownLocation();
         super.onBackPressed();
+    }
+
+    /**
+     * A method to save the users last known location on firestore
+     */
+    private void saveLastKnownLocation() {
+        Log.d(TAG, "saveLastKnownLocation: Saving last known location: " + mLastKnownLocation.toString());
+        //TODO: Save last known location somehow
     }
 
     @Override
@@ -1434,6 +1449,13 @@ public class MainActivity extends AppCompatActivity implements
         intent.putExtra("LOGGED_OUT", 1);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void getUpdatedEventsArray(ArrayList<MyEvent> events) {
+        Log.d(TAG, "getUpdatedEventsArray: Got events array from fragment: " + events.toString());
+        myCurrentTrip.setEvents(events);
+        saveUserToFirestore();
     }
 }
 

@@ -7,6 +7,10 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.VectorDrawable;
 import android.location.Location;
 import android.os.Bundle;
 
@@ -35,6 +39,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -64,10 +69,12 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentTransaction;
@@ -125,8 +132,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private String mySearchType = "";
 
     //Other
-    private MaterialToolbar materialToolbar;
-    private NavigationView navigationView;
     private DrawerLayout drawerLayout;
 
     /**
@@ -164,8 +169,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "initViews: Initializing views");
 
         drawerLayout = findViewById(R.id.map_LAY_mainDrawerlayout);
-        materialToolbar = findViewById(R.id.map_LAY_MaterialToolBar);
-        navigationView = findViewById(R.id.map_NAV_navigationView);
         materialSearchBar = findViewById(R.id.contentMap_SBR_searchBar);
         rippleBackground = findViewById(R.id.contentMap_RPL_ripple);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MapActivity.this);
@@ -189,27 +192,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         transaction1.replace(R.id.contentMap_LAY_buttonsFragment, searchTypeFragment);
         transaction1.commit();
         myMarkers = new ArrayList<>();
-
-        setToolbarStuff();
-    }
-
-
-    /**
-     * A method to initialize the toolbar options
-     */
-    private void setToolbarStuff() {
-        Log.d(TAG, "setToolbarStuff: Creating toolbar options");
-        navigationView.bringToFront();
-        materialToolbar.setTitle("Search places nearby!");
-//        setSupportActionBar(materialToolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, materialToolbar
-                , R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        navigationView.setNavigationItemSelectedListener(this);
-        navigationView.setCheckedItem(R.id.nav_map);
-//        Menu menu = navigationView.getMenu();
-//        menu.findItem(R.id.nav_profile).setVisible(false);
     }
 
     //I dont need to ask for location because of the start permission check
@@ -272,7 +254,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 Log.d(TAG, "onTextChanged: new prediction request");
-//                centerMarker.setVisibility(View.VISIBLE);
                 LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
                 double tempLat = currentMarkerLocation.latitude;
                 double tempLon = currentMarkerLocation.longitude;
@@ -371,7 +352,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         Log.d(TAG, "onSuccess: Fetching successfull: " + place.getLatLng().toString());
                         if (place != null) {
                             mySearchType = "default";
-//                            centerMarker.setVisibility(View.INVISIBLE);
+                            centerMarker.setVisibility(View.INVISIBLE);
                             addMarkerToMap(place);
                             moveCamera(place.getLatLng(), DEFAULT_ZOOM);
                         }
@@ -402,7 +383,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private void searchForGivenPlacesAroundMe() {
         Log.d(TAG, "searchForGivenPlacesAroundMe: Ripple animation");
-//        centerMarker.setVisibility(View.VISIBLE);
+        centerMarker.setVisibility(View.VISIBLE);
         LatLng currentMarkerLocation = mMap.getCameraPosition().target; // center of map
         rippleBackground.startRippleAnimation();
         openHttpRequestForPlaces(currentMarkerLocation);
@@ -555,8 +536,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 iconName = "default";
                 break;
         }
-        int icWidth = 100;
-        int icHeight = 100;
+        int icWidth = 150;
+        int icHeight = 150;
         Marker tempMarker = null;
         if (!iconName.equals("default")) { // Add marker from relative search
             Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources()
@@ -571,10 +552,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             tempMarker = mMap.addMarker(tempMarkerOptions);
 
         } else { // Add regular marker for specific place search
+            Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources()
+                    .getIdentifier("location_pin", "drawable", getPackageName()));
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, icWidth, icHeight, false);
+
+
             MarkerOptions tempMarkerOptions = new MarkerOptions()
                     .position(place.getLatLng())
                     .title(place.getName())
-                    .snippet("Tap for info");
+                    .snippet("Tap for info")
+                    .icon(BitmapDescriptorFactory.fromBitmap(resizedBitmap));
+
             tempMarker = mMap.addMarker(tempMarkerOptions);
         }
         myMarkers.add(new MyMarker(tempMarker, place));
@@ -590,6 +578,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
     }
+
 
     /**
      * Creates a new place details dialog
