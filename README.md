@@ -9,7 +9,7 @@ Including:
 - Map
 - Places of interest around me (Restaraunts, Transportation, Supermarkets etc..)
 - Translation service
-- Calendar with to-do list
+- Calendar with event list
 
 
 Main Page:
@@ -29,4 +29,12 @@ Search for places nearby:
 Display place details:
 
 <img src="https://github.com/Vadix3/Trippy/blob/master/Place.jpeg" width="200" />
+
+Calendar Activity:
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/Event%20Calendar.jpeg" width="200" />
+
+Next Event Details:
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/Event%20Details.jpeg" width="200" />
 
