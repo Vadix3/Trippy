@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements
                     myCurrentTrip = myContainer.getMyTrip();
                     myUser = myContainer.getMyUser();
                     TextView drawerName = findViewById(R.id.drawer_LBL_name);
-                    drawerName.setText(myUser.getFirstMame() + " " + myUser.getLastName());
+                    drawerName.setText(myUser.getFirstName() + " " + myUser.getLastName());
                     TextView drawerEmail = findViewById(R.id.drawer_LBL_email);
                     drawerEmail.setText(myUser.getEmailAddress());
                     Log.d(TAG, "onSuccess: Got user: " + myUser.toString());
@@ -508,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
 
-        materialToolbar.setTitle("Hi " + myUser.getFirstMame() + "!");
+        materialToolbar.setTitle("Hi " + myUser.getFirstName() + "!");
 //        setSupportActionBar(materialToolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, mainDrawerLayout, materialToolbar
                 , R.string.navigation_drawer_open, R.string.navigation_drawer_close);

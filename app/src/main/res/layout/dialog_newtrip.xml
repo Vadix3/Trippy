@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="5dp">
+
+    <LinearLayout
+        android:id="@+id/newtrip_LAY_tripNameLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/newtrip_LAY_caneldarLAyout"
+        android:layout_alignRight="@id/newtrip_LAY_caneldarLAyout"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:padding="2dp"
+        android:visibility="invisible">
+
+        <EditText
+            android:id="@+id/newtrip_EDT_tripName"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="2"
+            android:background="@drawable/round_login_border"
+            android:hint="Trip name"
+            android:padding="5dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:textColor="@color/quantum_bluegrey900" />
+
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/newtrip_LAY_caneldarLAyout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/newtrip_BTN_addTripNameButton"
+        android:layout_below="@+id/newtrip_LAY_tripNameLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:padding="2dp"
+        android:visibility="invisible">
+
+        <com.prolificinteractive.materialcalendarview.MaterialCalendarView xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/newtrip_CAL_calendar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/textbox_border"
+            android:padding="5dp"
+            app:mcv_firstDayOfWeek="sunday"
+            app:mcv_selectionColor="@color/colorPrimary"
+            app:mcv_showOtherDates="all" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/newtrip_LBL_helloLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:fontFamily="sans-serif-condensed"
+        android:gravity="center"
+        android:text="Hi!\nWould you like to add trip details?"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        tools:layout_editor_absoluteX="182dp"
+        tools:layout_editor_absoluteY="105dp" />
+
+    <TextView
+        android:id="@+id/newevent_LBL_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="Yes"
+        android:textColor="@color/coolGreen"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/newevent_LBL_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="no"
+        android:textColor="@color/coolRed"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/newtrip_BTN_addTripNameButton"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/round_login_button_backgroud"
+        android:backgroundTintMode="add"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Submit"
+        android:textColor="@color/white"
+        android:textSize="21sp"
+        android:textStyle="bold"
+        android:visibility="invisible" />
+
+</RelativeLayout>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/searchtype_LAY_mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="2dp"
+    android:layout_marginRight="2dp"
+    android:orientation="horizontal">
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/searchtype_BTN_toggleGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!--TODO: Attribute freepik,DinosoftLabs,Smashicons-->
+        <Button
+            android:id="@+id/searchtype_BTN_btn1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            app:icon="@drawable/ic_restaurant"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="25dp" />
+
+        <Button
+            android:id="@+id/searchtype_BTN_btn2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            app:icon="@drawable/ic_supermarket"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="25dp" />
+
+        <Button
+            android:id="@+id/searchtype_BTN_btn3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            app:icon="@drawable/ic_bar"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="25dp" />
+
+        <Button
+            android:id="@+id/searchtype_BTN_btn4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            app:icon="@drawable/ic_bus"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="25dp" />
+
+        <Button
+            android:id="@+id/searchtype_BTN_btn5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            app:icon="@drawable/ic_atm"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="25dp" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+
+</LinearLayout>
+
+

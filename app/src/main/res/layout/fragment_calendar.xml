@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/calendarFragment_LAY_cardview"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layerType="hardware"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="5dp"
+        app:cardMaxElevation="0dp"
+        app:cardPreventCornerOverlap="false"
+        app:cardUseCompatPadding="true">
+
+        <LinearLayout
+            android:id="@+id/calendarFragment_LAY_relativecard"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/calendarFragment_LAY_dateLayout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:background="@color/colorPrimary"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/calendarFragment_LBL_dateLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="2dp"
+                    android:layout_marginRight="2dp"
+                    android:drawableStart="@drawable/ic_baseline_event_24"
+                    android:drawablePadding="5dp"
+                    android:drawableTint="@color/white"
+                    android:gravity="center"
+                    android:text="Mar 11"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    app:autoSizeMinTextSize="1px"
+                    app:autoSizeTextType="uniform" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/calendarFragment_LAY_planLayout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_weight="2.5"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:orientation="vertical"
+                android:paddingTop="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Next plan:"
+                    android:textSize="20sp"
+                     />
+
+                <TextView
+                    android:id="@+id/calendarFragment_LBL_nextPlan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:text="Coffee at mikes"
+                    android:textSize="20sp" />
+
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</RelativeLayout>

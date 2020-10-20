@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/translator_LAY_mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp">
+
+    <EditText
+        android:id="@+id/translator_EDT_inputText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/textbox_border"
+        android:gravity="start|top"
+        android:hint="Enter text to translate"
+        android:imeOptions="actionDone"
+        android:importantForAutofill="no"
+        android:inputType="textMultiLine"
+        android:padding="12dp" />
+
+    <TextView
+        android:id="@+id/translator_LBL_outputText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/translator_BTN_translate"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/textbox_border"
+        android:gravity="center"
+        android:padding="12dp"
+        android:textSize="20dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/translator_BTN_translate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/translator_EDT_inputText"
+        android:layout_alignStart="@id/translator_EDT_inputText"
+        android:layout_alignEnd="@id/translator_EDT_inputText"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/round_login_button_backgroud"
+        android:backgroundTintMode="add"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Translate"
+        android:textColor="@color/white"
+        android:textSize="21sp"
+        android:textStyle="bold" />
+
+
+</RelativeLayout>

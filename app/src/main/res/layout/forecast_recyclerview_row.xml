@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/row_LAY_mainLayout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentTop="true"
+        android:layout_margin="3dp"
+        android:backgroundTint="@color/colorPrimary"
+        app:cardElevation="5dp"
+        app:cardMaxElevation="0dp"
+        app:strokeColor="#00BFA5"
+        app:strokeWidth="1.5dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/row_IMG_icon"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:background="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/row_LBL_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@id/row_IMG_icon"
+                android:text="Sunday"
+                android:textColor="@color/bpWhite"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/row_LBL_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/row_LBL_day"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@id/row_IMG_icon"
+                android:gravity="center"
+                android:text="Scattered clouds"
+                android:textColor="@color/bpWhite"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/row_LBL_realTemp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@id/row_LBL_day"
+                android:text="Real: 8°C"
+                android:textColor="@color/bpWhite"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/row_LBL_feelsLike"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@id/row_LBL_realTemp"
+                android:text="Feels: 2°C"
+                android:textColor="@color/bpWhite"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/row_LBL_humidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/row_LBL_description"
+                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@id/row_IMG_icon"
+                android:text="Humidity: 78%"
+                android:textColor="@color/bpWhite"
+                android:textSize="15sp" />
+
+
+        </RelativeLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+</RelativeLayout>

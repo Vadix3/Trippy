@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp">
+
+    <EditText
+        android:id="@+id/newevent_EDT_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:background="@drawable/round_login_border"
+        android:gravity="center"
+        android:hint="Name"
+        android:inputType="textPersonName|textCapWords"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <LinearLayout
+        android:id="@+id/newevent_LAY_timeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.473"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/newevent_EDT_name"
+        app:layout_constraintVertical_bias="0.014">
+
+        <EditText
+            android:id="@+id/newevent_EDT_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:padding="10dp"
+            android:background="@drawable/round_login_border"
+            android:focusable="false"
+            android:gravity="center"
+            android:hint="Time" />
+
+        <CheckBox
+            android:id="@+id/newevent_CHK_alarm"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:text="Alarm" />
+
+
+    </LinearLayout>
+
+    <com.mancj.materialsearchbar.MaterialSearchBar
+        android:id="@+id/newevent_BAR_searchBar"
+        style="@style/MaterialSearchBarLight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:outlineProvider="bounds"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@drawable/round_login_border"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/newevent_LST_typeSpinner"
+        app:layout_constraintVertical_bias="0.015"
+        app:mt_hint="Location"
+        app:mt_maxSuggestionsCount="2"
+        app:mt_placeholder="Location"
+        app:mt_speechMode="false" />
+
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/newevent_LST_typeSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:background="@drawable/round_login_border"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.842"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/newevent_LAY_timeLayout"
+        app:layout_constraintVertical_bias="0.013" />
+
+    <TextView
+        android:id="@+id/newevent_LBL_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:text="Save"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/newevent_LBL_cancel"
+        app:layout_constraintTop_toBottomOf="@+id/newevent_LST_typeSpinner"
+        app:layout_constraintVertical_bias="0.99" />
+
+    <TextView
+        android:id="@+id/newevent_LBL_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:text="Cancel"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/newevent_LBL_save"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/newevent_LST_typeSpinner"
+        app:layout_constraintVertical_bias="0.99" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/translateFragment_LAY_cardviewLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/translateFragment_LAY_cardview"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layerType="hardware"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="5dp"
+        app:cardMaxElevation="0dp"
+        app:cardPreventCornerOverlap="false"
+        app:cardUseCompatPadding="true">
+
+        <LinearLayout
+            android:id="@+id/translateFragment_LAY_relativecard"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/translateFragment_LAY_openTranslatorLayout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:layout_weight="1"
+                android:background="@color/colorPrimary"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/translateFragment_LBL_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_baseline_translate_24"
+                    android:drawablePadding="5dp"
+                    android:drawableTint="@color/white"
+                    android:gravity="center"
+                    android:text="Translator"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/translateFragment_LAY_focusableLinear"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_weight="2.5"
+                android:orientation="vertical"
+                android:paddingTop="10dp">
+
+                <EditText
+                    android:id="@+id/translateFragment_EDT_inputText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@drawable/round_login_border"
+                    android:layout_marginLeft="2dp"
+                    android:layout_marginRight="2dp"
+                    android:hint="Enter word"
+                    android:maxLines="1"
+                    android:maxLength="20"
+                    android:padding="10dp"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/translateFragment_LBL_translateResult"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="10dp"
+                    android:clickable="true"
+                    android:layout_marginLeft="2dp"
+                    android:layout_marginRight="2dp"
+                    android:layout_marginBottom="2dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="false"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:text="Translate"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</RelativeLayout>
