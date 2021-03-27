@@ -14,17 +14,11 @@ Including:
 
 Main Page:
 
-<img src="https://github.com/Vadix3/Trippy/blob/master/mainPage.jpeg" width="200" />
+<img src="https://github.com/Vadix3/Trippy/blob/master/images/homepage.jpeg" width="200" />
 
-Menu:
+Map with nearby places search:
 
-<img src="https://github.com/Vadix3/Trippy/blob/master/Menu.jpeg" width="200" />
-
-
-Search for places nearby:
-
-<img src="https://github.com/Vadix3/Trippy/blob/master/Search.jpeg" width="200" />
-
+<img src="https://github.com/Vadix3/Trippy/blob/master/images/map.gif" width="200" />
 
 Display place details:
 
@@ -34,7 +28,15 @@ Calendar Activity:
 
 <img src="https://github.com/Vadix3/Trippy/blob/master/Event%20Calendar.jpeg" width="200" />
 
-Next Event Details:
+Translation:
 
-<img src="https://github.com/Vadix3/Trippy/blob/master/Event%20Details.jpeg" width="200" />
+<img src="https://github.com/Vadix3/Trippy/blob/master/images/translation.gif" width="200" />
+
+Weather:
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/images/weather.gif" width="200" />
+
+Live currency converter:
+
+<img src="https://github.com/Vadix3/Trippy/blob/master/images/currency.gif" width="200" />
 
